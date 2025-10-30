@@ -94,12 +94,12 @@
 
 To run the application, clone this repository locally and run:
 ```shell script
-export ALERT_SYSTEM_ENVIRONMENT=testnet && go run cmd/main.go
+export ALERT_SYSTEM_ENVIRONMENT=testnet && go run cmd/go-alert-system/main.go
 ```
 
 To run this application with a custom configuration file, run:
 ```shell script
-export ALERT_SYSTEM_CONFIG_FILEPATH=path/to/file/config.json && go run cmd/main.go
+export ALERT_SYSTEM_CONFIG_FILEPATH=path/to/file/config.json && go run cmd/go-alert-system/main.go
 ```
 
 Configuration files can be found in the [config](app/config/envs) directory.

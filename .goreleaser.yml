@@ -7,13 +7,11 @@ version: 2
 before:
   hooks:
     - |
-      sh -c '
-        if [ "$SKIP_GORELEASER_TESTS" = "true" ]; then
-          echo "Skipping tests (SKIP_GORELEASER_TESTS=true)"
-        else
-          magex test
-        fi
-      '
+      sh -c "if [ \"${SKIP_GORELEASER_TESTS}\" = \"true\" ]; then
+        echo 'Skipping tests (SKIP_GORELEASER_TESTS=true)'
+      else
+        magex test
+      fi"
 changelog:
   sort: asc
   filters:
@@ -25,13 +23,28 @@ changelog:
 # Builder
 # ---------------------------
 builds:
-  - env:
+  - id: go-alert-system
+    main: ./cmd/go-alert-system
+    binary: go-alert-system
+    env:
       - CGO_ENABLED=0
     goos:
       - linux
-      - windows
       - darwin
-    skip: true
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    overrides:
+      - goos: linux
+        goarch: arm64
+        env:
+          - CC=aarch64-linux-gnu-gcc
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.buildDate={{.Date}}
 
 # ---------------------------
 # Archives
