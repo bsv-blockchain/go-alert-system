@@ -21,7 +21,7 @@
                 "sections": [
                     "standard",
                     "default",
-                    "prefix(github.com/bsv-blockchain/go-template)"
+                    "prefix(github.com/bsv-blockchain/go-alert-system)"
                 ]
             },
             "gofmt": {
@@ -32,7 +32,7 @@
             },
             "goimports": {
                 "local-prefixes": [
-                    "github.com/bsv-blockchain/go-template"
+                    "github.com/bsv-blockchain/go-alert-system"
                 ]
             }
         }
@@ -43,6 +43,11 @@
     "linters": {
         "disable": [
             "gocritic",
+            "gochecknoglobals",
+            "gocognit",
+            "nestif",
+            "gocyclo",
+            "wsl_v5",
             "godot"
         ],
         "enable": [
@@ -66,12 +71,9 @@
             "forbidigo",
             "funcorder",
             "gocheckcompilerdirectives",
-            "gochecknoglobals",
             "gochecknoinits",
             "gochecksumtype",
-            "gocognit",
             "goconst",
-            "gocyclo",
             "godox",
             "goheader",
             "gomoddirectives",
@@ -86,7 +88,6 @@
             "misspell",
             "musttag",
             "nakedret",
-            "nestif",
             "nilerr",
             "nilnesserr",
             "nilnil",
@@ -108,7 +109,6 @@
             "unparam",
             "unused",
             "wastedassign",
-            "wsl_v5",
             "zerologlint"
         ],
         "settings": {
