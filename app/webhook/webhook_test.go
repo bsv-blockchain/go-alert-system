@@ -1,7 +1,6 @@
 package webhook
 
 import (
-	"errors"
 	"net/http"
 )
 
@@ -15,7 +14,7 @@ func (c *MockHTTPClient) Do(req *http.Request) (*http.Response, error) {
 	if c.DoFunc != nil {
 		return c.DoFunc(req)
 	}
-	return nil, errors.New("unimplemented")
+	return nil, ErrWebhookMockUnimplemented
 }
 
 // TestPostAlert tests the PostAlert function

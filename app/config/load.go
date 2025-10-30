@@ -85,7 +85,7 @@ func LoadDependencies(ctx context.Context, models []interface{}, isTesting bool)
 		return nil, err
 	}
 
-	return
+	return _appConfig, nil
 }
 
 // requireP2P will ensure the P2P configuration is valid
@@ -240,7 +240,7 @@ func LoadConfigFile() (_appConfig *Config, err error) {
 	// Log the configuration that was detected and where it was loaded from
 	_appConfig.Services.Log.Debug("loaded configuration from: " + viper.ConfigFileUsed())
 
-	return
+	return _appConfig, nil
 }
 
 // createPrivateKeyDirectory will create the private key directory
@@ -296,11 +296,11 @@ func (c *Config) loadBitcoinConfiguration() error {
 
 	user := confValues["rpcuser"]
 	if user == "" {
-		return fmt.Errorf("rpcuser missing from bitcoin.conf file")
+		return ErrRPCUserMissingFromConfig
 	}
 	pass := confValues["rpcpassword"]
 	if pass == "" {
-		return fmt.Errorf("rpcpassword missing from bitcoin.conf file")
+		return ErrRPCPasswordMissingFromConfig
 	}
 	c.RPCConnections = []RPCConfig{
 		{

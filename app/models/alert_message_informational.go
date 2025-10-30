@@ -3,7 +3,6 @@ package models
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	"github.com/bsv-blockchain/go-sdk/util"
@@ -27,7 +26,7 @@ func (a *AlertMessageInformational) Read(alert []byte) error {
 		return err
 	}
 	if length > uint64(len(reader.Data)) {
-		return errors.New("info message length is longer than buffer")
+		return ErrInfoMessageLengthTooLong
 	}
 
 	// read the message
@@ -35,12 +34,12 @@ func (a *AlertMessageInformational) Read(alert []byte) error {
 	for i := uint64(0); i < length; i++ {
 		var b byte
 		if b, err = reader.ReadByte(); err != nil {
-			return fmt.Errorf("failed to read message: %s", err.Error())
+			return fmt.Errorf("%w: %s", ErrFailedToReadMessage, err.Error())
 		}
 		msg = append(msg, b)
 	}
 	if !reader.IsComplete() {
-		return fmt.Errorf("too many bytes in alert message")
+		return ErrTooManyBytesInAlert
 	}
 	a.Message = msg
 	a.MessageLength = length

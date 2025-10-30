@@ -72,18 +72,18 @@ func (n *Node) UnbanPeer(ctx context.Context, peer string) error {
 	return nil
 }
 
-// AddToConsensusBlacklist will call the AddToConsensusBlacklistFunc if not nil, otherwise return nil
+// AddToConsensusBlacklist will call the AddToConsensusBlacklistFunc if not nil, otherwise return empty response
 func (n *Node) AddToConsensusBlacklist(ctx context.Context, funds []models.Fund) (*models.AddToConsensusBlacklistResponse, error) {
 	if n.AddToConsensusBlacklistFunc != nil {
 		return n.AddToConsensusBlacklistFunc(ctx, funds)
 	}
-	return nil, nil
+	return &models.AddToConsensusBlacklistResponse{}, nil
 }
 
-// AddToConfiscationTransactionWhitelist will call the AddToConfiscationTransactionWhitelistFunc if not nil, otherwise return nil
+// AddToConfiscationTransactionWhitelist will call the AddToConfiscationTransactionWhitelistFunc if not nil, otherwise return empty response
 func (n *Node) AddToConfiscationTransactionWhitelist(ctx context.Context, tx []models.ConfiscationTransactionDetails) (*models.AddToConfiscationTransactionWhitelistResponse, error) {
 	if n.AddToConfiscationTransactionWhitelistFunc != nil {
 		return n.AddToConfiscationTransactionWhitelistFunc(ctx, tx)
 	}
-	return nil, nil
+	return &models.AddToConfiscationTransactionWhitelistResponse{}, nil
 }

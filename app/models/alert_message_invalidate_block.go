@@ -34,18 +34,18 @@ func (a *AlertMessageInvalidateBlock) Read(alert []byte) error {
 		return err
 	}
 	if length == 0 {
-		return fmt.Errorf("no reason message provided")
+		return ErrNoReasonMessageProvided
 	}
 	var msg []byte
 	for i := uint64(0); i < length; i++ {
 		var b byte
 		if b, err = reader.ReadByte(); err != nil {
-			return fmt.Errorf("failed to read reason: %s", err.Error())
+			return fmt.Errorf("%w: %s", ErrFailedToReadReasonInvalidate, err.Error())
 		}
 		msg = append(msg, b)
 	}
 	if !reader.IsComplete() {
-		return fmt.Errorf("too many bytes in alert message")
+		return ErrTooManyBytesInAlert
 	}
 	a.ReasonLength = length
 	a.Reason = msg

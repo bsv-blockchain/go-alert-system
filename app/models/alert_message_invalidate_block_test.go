@@ -70,7 +70,12 @@ func TestAlertMessageInvalidateBlock_Read(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				assert.Equal(t, tt.blockHash, a.BlockHash.String())
-				assert.Equal(t, uint64(len(tt.reason)-1), a.ReasonLength)
+				reasonLen := len(tt.reason) - 1
+				if reasonLen < 0 {
+					reasonLen = 0
+				}
+				//nolint:gosec // G115: Safe conversion - negative values checked above
+				assert.Equal(t, uint64(reasonLen), a.ReasonLength)
 				assert.Equal(t, tt.reason[1:], a.Reason)
 			}
 		})

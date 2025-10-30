@@ -1,3 +1,4 @@
+// Package utils provides cryptographic key utilities for Bitcoin alert signing and verification.
 package utils
 
 import (

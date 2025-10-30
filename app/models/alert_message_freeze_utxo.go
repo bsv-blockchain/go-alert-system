@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math"
 
 	"github.com/bsv-blockchain/go-bn/models"
 )
@@ -44,10 +45,10 @@ func (f *Fund) Serialize() []byte {
 // Read reads the message
 func (a *AlertMessageFreezeUtxo) Read(raw []byte) error {
 	if len(raw) < 57 {
-		return fmt.Errorf("freeze alert is less than 57 bytes, got %d bytes; raw: %x", len(raw), raw)
+		return fmt.Errorf("%w, got %d bytes; raw: %x", ErrFreezeAlertTooShort, len(raw), raw)
 	}
 	if len(raw)%57 != 0 {
-		return fmt.Errorf("freeze alert is not a multiple of 57 bytes, got %d bytes; raw: %x", len(raw), raw)
+		return fmt.Errorf("%w, got %d bytes; raw: %x", ErrFreezeAlertInvalidLength, len(raw), raw)
 	}
 	fundCount := len(raw) / 57
 	var funds []models.Fund
@@ -62,6 +63,9 @@ func (a *AlertMessageFreezeUtxo) Read(raw []byte) error {
 
 		if enforceByte != uint8(0) {
 			fund.PolicyExpiresWithConsensus = true
+		}
+		if fund.Vout > math.MaxInt || fund.EnforceAtHeightStart > math.MaxInt || fund.EnforceAtHeightEnd > math.MaxInt {
+			return ErrValueExceedsMaxInt
 		}
 		funds = append(funds, models.Fund{
 			TxOut: models.TxOut{

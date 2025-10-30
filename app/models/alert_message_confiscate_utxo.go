@@ -5,8 +5,8 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"math"
 
 	"github.com/bsv-blockchain/go-sdk/util"
 
@@ -29,7 +29,7 @@ type ConfiscateTransaction struct {
 // Read reads the alert
 func (a *AlertMessageConfiscateTransaction) Read(raw []byte) error {
 	if len(raw) < 9 {
-		return fmt.Errorf("confiscation alert is less than 9 bytes")
+		return ErrConfiscationAlertTooShort
 	}
 	// TODO: assume for now only 1 confiscation tx in the alert for simplicity
 	var details []models.ConfiscationTransactionDetails
@@ -41,7 +41,7 @@ func (a *AlertMessageConfiscateTransaction) Read(raw []byte) error {
 		return err
 	}
 	if length > uint64(len(reader.Data)) {
-		return errors.New("tx hex length is longer than the remaining buffer")
+		return ErrTxHexLengthTooLong
 	}
 
 	// read the tx hex
@@ -49,11 +49,14 @@ func (a *AlertMessageConfiscateTransaction) Read(raw []byte) error {
 	for i := uint64(0); i < length; i++ {
 		var b byte
 		if b, err = reader.ReadByte(); err != nil {
-			return fmt.Errorf("failed to read tx hex: %s", err.Error())
+			return fmt.Errorf("%w: %s", ErrFailedToReadTxHex, err.Error())
 		}
 		rawHex = append(rawHex, b)
 	}
 
+	if enforceAtHeight > math.MaxInt64 {
+		return ErrEnforceAtHeightOverflow
+	}
 	detail := models.ConfiscationTransactionDetails{
 		ConfiscationTransaction: models.ConfiscationTransaction{
 			EnforceAtHeight: int64(enforceAtHeight),
@@ -76,7 +79,7 @@ func (a *AlertMessageConfiscateTransaction) Do(ctx context.Context) error {
 	}
 	if len(res.NotProcessed) > 0 {
 		// we can safely assume this is just one not processed tx because we are only publishing one tx with the alert right now
-		return fmt.Errorf("confiscation alert RPC response returned an error; reason: %s", res.NotProcessed[0].Reason)
+		return fmt.Errorf("%w; reason: %s", ErrConfiscationAlertRPCError, res.NotProcessed[0].Reason)
 	}
 	return nil
 }

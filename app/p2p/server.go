@@ -394,49 +394,6 @@ func (s *Server) RunAlertProcessingCron(ctx context.Context) chan bool {
 	return quit
 }
 
-// processAlerts performs the alert processing
-func (s *Server) processAlerts(ctx context.Context) error {
-	alerts, err := models.GetAllUnprocessedAlerts(ctx, nil, model.WithAllDependencies(s.config))
-	if err != nil {
-		return err
-	}
-	s.config.Services.Log.Infof("Attempting to process %d failed alerts", len(alerts))
-	success := 0
-	for _, alert := range alerts {
-		alert.SetOptions(model.WithAllDependencies(s.config))
-		// Serialize the alert data and hash
-		err := alert.ReadRaw()
-		if err != nil {
-			continue
-		}
-		alert.SerializeData()
-		// Process the alert
-		ak := alert.ProcessAlertMessage()
-		if ak == nil {
-			continue
-		}
-		if err = ak.Read(alert.GetRawMessage()); err != nil {
-			return err
-		}
-		s.config.Services.Log.Debugf("attempting to process alert %d of type %d", alert.SequenceNumber, alert.GetAlertType())
-		alert.Processed = true
-		if err = ak.Do(ctx); err != nil {
-			s.config.Services.Log.Errorf("failed to process alert %d; err: %v", alert.SequenceNumber, err.Error())
-			alert.Processed = false
-		}
-
-		if alert.Processed {
-			success++
-			// Save the alert
-			if err = alert.Save(ctx); err != nil {
-				return err
-			}
-		}
-	}
-	s.config.Services.Log.Infof("Processed %d failed alerts", success)
-	return nil
-}
-
 // RunPeerDiscovery starts a cron job to resync peers and updates routable peers
 func (s *Server) RunPeerDiscovery(ctx context.Context, routingDiscovery *drouting.RoutingDiscovery) {
 	ticker := time.NewTicker(s.config.P2P.PeerDiscoveryInterval)
@@ -516,98 +473,6 @@ func (s *Server) Subscriptions() map[string]*pubsub.Subscription {
 // Topics lists all topics
 func (s *Server) Topics() map[string]*pubsub.Topic {
 	return s.topics
-}
-
-// discoverPeers will discover peers
-func (s *Server) discoverPeers(ctx context.Context, routingDiscovery *drouting.RoutingDiscovery) error {
-	s.config.Services.Log.Infof("Running peer discovery at %s", time.Now().String())
-
-	// Look for others who have announced and attempt to connect to them
-	connected := 0
-
-OUTER:
-	for {
-		select {
-		case <-s.quitPeerDiscoveryChannel:
-			s.config.Services.Log.Infof("stopping peer discovery process from channel")
-			return nil
-		case <-ctx.Done():
-			s.config.Services.Log.Infof("stopping peer discovery process from context")
-			return nil
-		default:
-			if connected < 2 {
-				for _, topicName := range s.topicNames {
-					s.config.Services.Log.Debugf("searching for peers for topic %s..\n", topicName)
-
-					var peerChan <-chan peer.AddrInfo
-					var err error
-					if peerChan, err = routingDiscovery.FindPeers(ctx, topicName, discovery.TTL(1*time.Minute)); err != nil {
-						return err
-					}
-
-					// Loop through all peers found
-					for foundPeer := range peerChan {
-
-						// Don't connect to ourselves
-						if foundPeer.ID == s.host.ID() {
-							continue // No self-connection
-						}
-
-						// Failed to connect to peer
-						s.config.Services.Log.Debugf("attempting connection to %s", foundPeer.ID.String())
-
-						if err = s.host.Connect(ctx, foundPeer); err != nil {
-							// we fail to connect to a lot of peers. Ignore it for now.
-							s.config.Services.Log.Debugf("failed connecting to %s, error: %s", foundPeer.ID.String(), err.Error())
-							continue
-						}
-
-						// Connected to peer
-						s.config.Services.Log.Infof("connected to: %s", foundPeer.ID.String())
-
-						// Open a stream to the peer
-						var stream network.Stream
-						if stream, err = s.host.NewStream(ctx, foundPeer.ID, protocol.ID(s.config.P2P.AlertSystemProtocolID)); err != nil {
-							s.config.Services.Log.Debugf("failed new stream to %s error: %s", foundPeer.ID.String(), err.Error())
-							continue
-						}
-
-						// Sync the stream thread
-						t := StreamThread{
-							config:      s.config,
-							ctx:         ctx,
-							peer:        foundPeer.ID,
-							stream:      stream,
-							quitChannel: s.quitPeerDiscoveryChannel,
-						}
-
-						// Sync the stream thread
-						if err = t.Sync(ctx); err != nil {
-							s.config.Services.Log.Debugf("failed to start stream thread to %s error: %s", foundPeer.ID.String(), err.Error())
-							continue
-						}
-
-						s.config.Services.Log.Infof("successfully synced up to %d from peer %s", t.LatestSequence(), foundPeer.ID.String())
-
-						// Set the flag
-						connected++
-					}
-					time.Sleep(1 * time.Second)
-				}
-			} else {
-				break OUTER
-			}
-		}
-	}
-
-	// We are connected
-	s.config.Services.Log.Debugf("peer discovery complete")
-	s.config.Services.Log.Debugf("connected to %d peers\n", len(s.host.Network().Peers()))
-	s.config.Services.Log.Debugf("peerstore has %d peers\n", len(s.host.Peerstore().Peers()))
-	s.config.Services.Log.Infof("Successfully discovered %d active peers at %s", connected, time.Now().String())
-	s.activePeers = connected
-	s.connected = true
-	return nil
 }
 
 // Subscribe will subscribe to the alert system
@@ -703,4 +568,139 @@ func (s *Server) Subscribe(ctx context.Context, subscriber *pubsub.Subscription,
 			}
 		}
 	}
+}
+
+// processAlerts performs the alert processing
+func (s *Server) processAlerts(ctx context.Context) error {
+	alerts, err := models.GetAllUnprocessedAlerts(ctx, nil, model.WithAllDependencies(s.config))
+	if err != nil {
+		return err
+	}
+	s.config.Services.Log.Infof("Attempting to process %d failed alerts", len(alerts))
+	success := 0
+	for _, alert := range alerts {
+		alert.SetOptions(model.WithAllDependencies(s.config))
+		// Serialize the alert data and hash
+		err := alert.ReadRaw()
+		if err != nil {
+			continue
+		}
+		alert.SerializeData()
+		// Process the alert
+		ak := alert.ProcessAlertMessage()
+		if ak == nil {
+			continue
+		}
+		if err = ak.Read(alert.GetRawMessage()); err != nil {
+			return err
+		}
+		s.config.Services.Log.Debugf("attempting to process alert %d of type %d", alert.SequenceNumber, alert.GetAlertType())
+		alert.Processed = true
+		if err = ak.Do(ctx); err != nil {
+			s.config.Services.Log.Errorf("failed to process alert %d; err: %v", alert.SequenceNumber, err.Error())
+			alert.Processed = false
+		}
+
+		if alert.Processed {
+			success++
+			// Save the alert
+			if err = alert.Save(ctx); err != nil {
+				return err
+			}
+		}
+	}
+	s.config.Services.Log.Infof("Processed %d failed alerts", success)
+	return nil
+}
+
+// discoverPeers discovers and connects to peers
+func (s *Server) discoverPeers(ctx context.Context, routingDiscovery *drouting.RoutingDiscovery) error {
+	s.config.Services.Log.Infof("Running peer discovery at %s", time.Now().String())
+
+	// Look for others who have announced and attempt to connect to them
+	connected := 0
+
+OUTER:
+	for {
+		select {
+		case <-s.quitPeerDiscoveryChannel:
+			s.config.Services.Log.Infof("stopping peer discovery process from channel")
+			return nil
+		case <-ctx.Done():
+			s.config.Services.Log.Infof("stopping peer discovery process from context")
+			return nil
+		default:
+			if connected < 2 {
+				for _, topicName := range s.topicNames {
+					s.config.Services.Log.Debugf("searching for peers for topic %s..\n", topicName)
+
+					var peerChan <-chan peer.AddrInfo
+					var err error
+					if peerChan, err = routingDiscovery.FindPeers(ctx, topicName, discovery.TTL(1*time.Minute)); err != nil {
+						return err
+					}
+
+					// Loop through all peers found
+					for foundPeer := range peerChan {
+
+						// Don't connect to ourselves
+						if foundPeer.ID == s.host.ID() {
+							continue // No self-connection
+						}
+
+						// Failed to connect to peer
+						s.config.Services.Log.Debugf("attempting connection to %s", foundPeer.ID.String())
+
+						if err = s.host.Connect(ctx, foundPeer); err != nil {
+							// we fail to connect to a lot of peers. Ignore it for now.
+							s.config.Services.Log.Debugf("failed connecting to %s, error: %s", foundPeer.ID.String(), err.Error())
+							continue
+						}
+
+						// Connected to peer
+						s.config.Services.Log.Infof("connected to: %s", foundPeer.ID.String())
+
+						// Open a stream to the peer
+						var stream network.Stream
+						if stream, err = s.host.NewStream(ctx, foundPeer.ID, protocol.ID(s.config.P2P.AlertSystemProtocolID)); err != nil {
+							s.config.Services.Log.Debugf("failed new stream to %s error: %s", foundPeer.ID.String(), err.Error())
+							continue
+						}
+
+						// Sync the stream thread
+						t := StreamThread{
+							config:      s.config,
+							ctx:         ctx,
+							peer:        foundPeer.ID,
+							stream:      stream,
+							quitChannel: s.quitPeerDiscoveryChannel,
+						}
+
+						// Sync the stream thread
+						if err = t.Sync(ctx); err != nil {
+							s.config.Services.Log.Debugf("failed to start stream thread to %s error: %s", foundPeer.ID.String(), err.Error())
+							continue
+						}
+
+						s.config.Services.Log.Infof("successfully synced up to %d from peer %s", t.LatestSequence(), foundPeer.ID.String())
+
+						// Set the flag
+						connected++
+					}
+					time.Sleep(1 * time.Second)
+				}
+			} else {
+				break OUTER
+			}
+		}
+	}
+
+	// We are connected
+	s.config.Services.Log.Debugf("peer discovery complete")
+	s.config.Services.Log.Debugf("connected to %d peers\n", len(s.host.Network().Peers()))
+	s.config.Services.Log.Debugf("peerstore has %d peers\n", len(s.host.Peerstore().Peers()))
+	s.config.Services.Log.Infof("Successfully discovered %d active peers at %s", connected, time.Now().String())
+	s.activePeers = connected
+	s.connected = true
+	return nil
 }

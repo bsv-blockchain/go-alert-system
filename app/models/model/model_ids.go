@@ -15,7 +15,7 @@ import (
 type IDs []string
 
 // GormDataType type in gorm
-func (i IDs) GormDataType() string {
+func (i *IDs) GormDataType() string {
 	return gormTypeText
 }
 
@@ -39,11 +39,12 @@ func (i *IDs) Scan(value interface{}) error { // Cannot fix issue mentioned by G
 }
 
 // Value return json value, implement driver.Valuer interface
-func (i IDs) Value() (driver.Value, error) {
-	if i == nil {
+func (i *IDs) Value() (driver.Value, error) {
+	if i == nil || *i == nil {
+		//nolint:nilnil // Returning (nil, nil) is valid for driver.Valuer interface to represent SQL NULL
 		return nil, nil
 	}
-	marshal, err := json.Marshal(i)
+	marshal, err := json.Marshal(*i)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +61,7 @@ func MarshalIDs(i IDs) graphql.Marshaler {
 }
 
 // GormDBDataType the gorm data type for metadata
-func (IDs) GormDBDataType(db *gorm.DB, _ *schema.Field) string {
+func (*IDs) GormDBDataType(db *gorm.DB, _ *schema.Field) string {
 	if db.Name() == datastore.Postgres {
 		return datastore.JSONB
 	}

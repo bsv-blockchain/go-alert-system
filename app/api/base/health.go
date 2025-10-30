@@ -2,7 +2,6 @@ package base
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 
 	"github.com/bsv-blockchain/go-alert-system/app"
@@ -29,7 +28,7 @@ func (a *Action) health(w http.ResponseWriter, req *http.Request, _ httprouter.P
 		app.APIErrorResponse(w, req, http.StatusBadRequest, err)
 		return
 	} else if alert == nil {
-		app.APIErrorResponse(w, req, http.StatusNotFound, errors.New("alert not found"))
+		app.APIErrorResponse(w, req, http.StatusNotFound, ErrAlertNotFound)
 		return
 	}
 

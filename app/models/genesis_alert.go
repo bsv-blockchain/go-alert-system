@@ -44,7 +44,12 @@ func CreateGenesisAlert(ctx context.Context, opts ...model.Options) error {
 	newAlert.SetAlertType(AlertTypeSetKeys)
 	newAlert.message = msg
 	newAlert.SequenceNumber = 0
-	newAlert.timestamp = uint64(time.Date(2923, time.November, 1, 1, 1, 1, 1, time.UTC).Unix())
+	genesisTime := time.Date(2923, time.November, 1, 1, 1, 1, 1, time.UTC).Unix()
+	if genesisTime < 0 {
+		genesisTime = 0
+	}
+	//nolint:gosec // G115: Safe conversion - negative values checked above
+	newAlert.timestamp = uint64(genesisTime)
 	newAlert.version = 1
 	newAlert.Processed = true
 

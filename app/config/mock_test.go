@@ -2,7 +2,6 @@ package config
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/bsv-blockchain/go-alert-system/app/config/mocks"
@@ -17,7 +16,7 @@ func TestBanPeer(t *testing.T) {
 			if peer == "expected_peer_address" {
 				return nil
 			}
-			return fmt.Errorf("unexpected peer address")
+			return ErrUnexpectedPeerAddress
 		},
 	}
 
@@ -34,7 +33,7 @@ func TestUnBanPeer(t *testing.T) {
 			if peer == "expected_peer_address" {
 				return nil
 			}
-			return fmt.Errorf("unexpected peer address")
+			return ErrUnexpectedPeerAddress
 		},
 	}
 
@@ -51,7 +50,7 @@ func TestInvalidateBlock(t *testing.T) {
 			if hash == "expected_hash" {
 				return nil
 			}
-			return fmt.Errorf("unexpected hash")
+			return ErrUnexpectedHash
 		},
 	}
 

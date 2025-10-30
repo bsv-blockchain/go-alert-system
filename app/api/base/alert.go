@@ -3,7 +3,6 @@ package base
 import (
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"net/http"
 	"strconv"
 
@@ -37,6 +36,11 @@ func (a *Action) alert(w http.ResponseWriter, req *http.Request, _ httprouter.Pa
 		apirouter.ReturnResponse(w, req, apiError.Code, apiError)
 		return
 	}
+	if sequenceNumber < 0 || sequenceNumber > 4294967295 {
+		apiError := apirouter.ErrorFromRequest(req, "sequence out of range", "sequence out of range", http.StatusBadRequest, http.StatusBadRequest, "")
+		apirouter.ReturnResponse(w, req, apiError.Code, apiError)
+		return
+	}
 
 	// Get alert
 	alertModel, err := models.GetAlertMessageBySequenceNumber(req.Context(), uint32(sequenceNumber), model.WithAllDependencies(a.Config))
@@ -44,17 +48,17 @@ func (a *Action) alert(w http.ResponseWriter, req *http.Request, _ httprouter.Pa
 		app.APIErrorResponse(w, req, http.StatusInternalServerError, err)
 		return
 	} else if alertModel == nil {
-		app.APIErrorResponse(w, req, http.StatusNotFound, errors.New("alert not found"))
+		app.APIErrorResponse(w, req, http.StatusNotFound, ErrAlertNotFound)
 		return
 	}
 	err = alertModel.ReadRaw()
 	if err != nil {
-		app.APIErrorResponse(w, req, http.StatusInternalServerError, errors.New("alert faile"))
+		app.APIErrorResponse(w, req, http.StatusInternalServerError, ErrAlertFailed)
 		return
 	}
 	am := alertModel.ProcessAlertMessage()
 	if am == nil {
-		app.APIErrorResponse(w, req, http.StatusInternalServerError, errors.New("alert not valid type"))
+		app.APIErrorResponse(w, req, http.StatusInternalServerError, ErrAlertNotValidType)
 		return
 	}
 	err = am.Read(alertModel.GetRawMessage())

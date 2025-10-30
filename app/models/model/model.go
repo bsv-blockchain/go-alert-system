@@ -19,7 +19,7 @@ type Model struct {
 
 	CreatedAt time.Time            `json:"created_at" toml:"created_at" yaml:"created_at" bson:"created_at" gorm:"comment:The time that the record was originally created"`
 	DeletedAt customTypes.NullTime `json:"deleted_at" toml:"deleted_at" yaml:"deleted_at" bson:"deleted_at,omitempty" gorm:"index;comment:The time the record was marked as deleted"`
-	Metadata  Metadata             `toml:"metadata,omitempty" yaml:"metadata,omitempty" bson:"metadata,omitempty" json:"metadata,omitempty" gorm:"type:json;comment:The JSON metadata for the record"`
+	Metadata  Metadata             `toml:"metadata,omitempty" yaml:"metadata,omitempty" bson:"metadata,omitempty" json:"metadata,omitempty" gorm:"serializer:json;type:json;comment:The JSON metadata for the record"`
 	UpdatedAt time.Time            `json:"updated_at" toml:"updated_at" yaml:"updated_at" bson:"updated_at,omitempty" gorm:"comment:The time that the record was last updated"`
 
 	// Private fields

@@ -11,7 +11,7 @@ import (
 
 // TestSuite is for testing the entire package using real/mocked services
 type TestSuite struct {
-	suite.Suite                 // Extends the suite.Suite package
+	suite.Suite // Extends the suite.Suite package
 
 	Dependencies *config.Config // App config and services (dependencies)
 }

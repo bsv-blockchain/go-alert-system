@@ -25,7 +25,7 @@ const (
 type Metadata map[string]interface{}
 
 // GormDataType type in gorm
-func (m Metadata) GormDataType() string {
+func (m *Metadata) GormDataType() string {
 	return gormTypeText
 }
 
@@ -63,11 +63,12 @@ func (m *Metadata) Scan(value interface{}) error {
 }
 
 // Value return json value, implement driver.Valuer interface
-func (m Metadata) Value() (driver.Value, error) {
-	if m == nil {
+func (m *Metadata) Value() (driver.Value, error) {
+	if m == nil || *m == nil {
+		//nolint:nilnil // Returning (nil, nil) is valid for driver.Valuer interface to represent SQL NULL
 		return nil, nil
 	}
-	marshal, err := json.Marshal(m)
+	marshal, err := json.Marshal(*m)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +77,7 @@ func (m Metadata) Value() (driver.Value, error) {
 }
 
 // GormDBDataType the gorm data type for metadata
-func (Metadata) GormDBDataType(db *gorm.DB, _ *schema.Field) string {
+func (*Metadata) GormDBDataType(db *gorm.DB, _ *schema.Field) string {
 	if db.Name() == datastore.Postgres {
 		return datastore.JSONB
 	}
@@ -133,6 +134,7 @@ func MarshalMetadata(m Metadata) graphql.Marshaler {
 // UnmarshalMetadata will unmarshal the custom type
 func UnmarshalMetadata(v interface{}) (Metadata, error) {
 	if v == nil {
+		//nolint:nilnil // Returning (nil, nil) is acceptable for unmarshaling nil GraphQL values
 		return nil, nil
 	}
 	return graphql.UnmarshalMap(v)

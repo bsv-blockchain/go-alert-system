@@ -17,16 +17,16 @@ func Save(ctx context.Context, model BaseInterface) (err error) {
 	}
 
 	// Create new Datastore transaction
-	// NOTE: we need this to be in a callback context for Mongo
+	// We need this to be in a callback context for Mongo
 	return ds.NewTx(ctx, func(tx *datastore.Transaction) (err error) {
 		// Fire the before hooks (parent model)
 		if model.IsNew() {
 			if err = model.BeforeCreating(ctx); err != nil {
-				return
+				return err
 			}
 		} else {
 			if err = model.BeforeUpdating(ctx); err != nil {
-				return
+				return err
 			}
 		}
 
@@ -41,11 +41,11 @@ func Save(ctx context.Context, model BaseInterface) (err error) {
 			for _, child := range children {
 				if child.IsNew() {
 					if err = child.BeforeCreating(ctx); err != nil {
-						return
+						return err
 					}
 				} else {
 					if err = child.BeforeUpdating(ctx); err != nil {
-						return
+						return err
 					}
 				}
 
@@ -66,7 +66,7 @@ func Save(ctx context.Context, model BaseInterface) (err error) {
 			if err = modelsToSave[index].Datastore().SaveModel(
 				ctx, modelsToSave[index], tx, modelsToSave[index].IsNew(), false,
 			); err != nil {
-				return
+				return err
 			}
 		}
 
@@ -74,7 +74,7 @@ func Save(ctx context.Context, model BaseInterface) (err error) {
 		if tx.CanCommit() {
 			// model.DebugLog(ctx, "committing db transaction...")
 			if err = tx.Commit(); err != nil {
-				return
+				return err
 			}
 		}
 
@@ -82,7 +82,7 @@ func Save(ctx context.Context, model BaseInterface) (err error) {
 		var afterErr error
 		for index := range modelsToSave {
 			if modelsToSave[index].IsNew() {
-				modelsToSave[index].NotNew() // NOTE: calling it before this method... after created assumes it's been saved already
+				modelsToSave[index].NotNew() // Calling it before this method... after created assumes it's been saved already
 				afterErr = modelsToSave[index].AfterCreated(ctx)
 			} else {
 				afterErr = modelsToSave[index].AfterUpdated(ctx)
@@ -97,7 +97,7 @@ func Save(ctx context.Context, model BaseInterface) (err error) {
 			// modelToSave.NotNew() // NOTE: moved to above from here
 		}
 
-		return
+		return err
 	})
 }
 
@@ -112,11 +112,11 @@ func BeginSaveWithTx(ctx context.Context, tx *datastore.Transaction, model BaseI
 	// Fire the before hooks (parent model)
 	if model.IsNew() {
 		if err = model.BeforeCreating(ctx); err != nil {
-			return
+			return nil, err
 		}
 	} else {
 		if err = model.BeforeUpdating(ctx); err != nil {
-			return
+			return nil, err
 		}
 	}
 
@@ -131,11 +131,11 @@ func BeginSaveWithTx(ctx context.Context, tx *datastore.Transaction, model BaseI
 		for _, child := range children {
 			if child.IsNew() {
 				if err = child.BeforeCreating(ctx); err != nil {
-					return
+					return nil, err
 				}
 			} else {
 				if err = child.BeforeUpdating(ctx); err != nil {
-					return
+					return nil, err
 				}
 			}
 
@@ -156,11 +156,11 @@ func BeginSaveWithTx(ctx context.Context, tx *datastore.Transaction, model BaseI
 		if err = modelsToSave[index].Datastore().SaveModel(
 			ctx, modelsToSave[index], tx, modelsToSave[index].IsNew(), false,
 		); err != nil {
-			return
+			return nil, err
 		}
 	}
 
-	return
+	return modelsToSave, nil
 }
 
 // CompleteSaveWithTx will finish saving the model(s) into the Datastore
@@ -169,7 +169,7 @@ func CompleteSaveWithTx(ctx context.Context, tx *datastore.Transaction, modelsTo
 	if tx.CanCommit() {
 		// modelsToSave[0].DebugLog(ctx, "committing db transaction...")
 		if err = tx.Commit(); err != nil {
-			return
+			return err
 		}
 	}
 
@@ -177,7 +177,7 @@ func CompleteSaveWithTx(ctx context.Context, tx *datastore.Transaction, modelsTo
 	var afterErr error
 	for index := range modelsToSave {
 		if modelsToSave[index].IsNew() {
-			modelsToSave[index].NotNew() // NOTE: calling it before this method... after created assumes it's been saved already
+			modelsToSave[index].NotNew() // Calling it before this method... after created assumes it's been saved already
 			afterErr = modelsToSave[index].AfterCreated(ctx)
 		} else {
 			afterErr = modelsToSave[index].AfterUpdated(ctx)
@@ -192,5 +192,5 @@ func CompleteSaveWithTx(ctx context.Context, tx *datastore.Transaction, modelsTo
 		// modelToSave.NotNew() // NOTE: moved to above from here
 	}
 
-	return
+	return err
 }

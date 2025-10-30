@@ -27,12 +27,12 @@ func PostAlert(ctx context.Context, httpClient config.HTTPInterface, url string,
 	var err error
 	// Validate the URL length
 	if len(url) == 0 {
-		return fmt.Errorf("webhook URL is not configured")
+		return ErrWebhookURLNotConfigured
 	}
 
 	// Validate the URL prefix
 	if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
-		return fmt.Errorf("webhook URL [%s] is does not have a valid prefix", url)
+		return fmt.Errorf("%w: %s", ErrWebhookURLInvalidPrefix, url)
 	}
 
 	am := alert.ProcessAlertMessage()
@@ -76,7 +76,7 @@ func PostAlert(ctx context.Context, httpClient config.HTTPInterface, url string,
 
 	// Validate the response
 	if res != nil && res.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code [%d] sending payload to webhook", res.StatusCode)
+		return fmt.Errorf("%w: %d", ErrWebhookUnexpectedStatus, res.StatusCode)
 	}
 	return nil
 }

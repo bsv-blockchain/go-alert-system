@@ -6,7 +6,6 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
-	"fmt"
 
 	"github.com/bitcoinschema/go-bitcoin"
 	"github.com/bitcoinsv/bsvd/bsvec"
@@ -51,6 +50,20 @@ func NewAlertMessage(opts ...model.Options) *AlertMessage {
 	return &AlertMessage{
 		Model: *model.NewBaseModel(model.NameAlertMessage, opts...),
 	}
+}
+
+// NewAlertFromBytes creates a new alert from bytes
+func NewAlertFromBytes(ak []byte, opts ...model.Options) (*AlertMessage, error) {
+	opts = append(opts, model.New())
+	newAlert := NewAlertMessage(opts...)
+	newAlert.SetRawMessage(ak)
+	err := newAlert.ReadRaw()
+	if err != nil {
+		return nil, err
+	}
+
+	// Return alert
+	return newAlert, nil
 }
 
 // Name will get the name of the model
@@ -147,7 +160,7 @@ func (m *AlertMessage) AreSignaturesValid(ctx context.Context) (bool, error) {
 	if err != nil {
 		return false, err
 	} else if len(keys) == 0 {
-		return false, fmt.Errorf("no active public keys found")
+		return false, ErrNoActivePublicKeys
 	}
 
 	// Loop through all signatures
@@ -169,7 +182,7 @@ func (m *AlertMessage) AreSignaturesValid(ctx context.Context) (bool, error) {
 			if addr, err = bitcoin.GetAddressFromPubKey(pub, true); err != nil {
 				return false, err
 			} else if addr == nil {
-				return false, errors.New("failed to convert pub key to address")
+				return false, ErrFailedToConvertPubKey
 			}
 
 			// Verify the message
@@ -261,7 +274,7 @@ func (m *AlertMessage) ReadRaw() error {
 
 	if len(m.GetRawMessage()) < 16 {
 		// todo DETERMINE ACTUAL PROPER LENGTH
-		return fmt.Errorf("alert needs to be at least 16 bytes")
+		return ErrAlertTooShort
 	}
 	ak := m.GetRawMessage()
 	version := binary.LittleEndian.Uint32(ak[:4])
@@ -283,7 +296,7 @@ func (m *AlertMessage) ReadRaw() error {
 	// but possible. Regardless, let's just error out now if this length is lower. At least
 	// allows us to grab the expected signature.
 	if len(alertAndSignature) < sigLen+2 {
-		return fmt.Errorf("alert message is invalid - too short length")
+		return ErrAlertMessageInvalidLength
 	}
 
 	// Get alert message bytes
@@ -312,20 +325,6 @@ func (m *AlertMessage) ReadRaw() error {
 	return nil
 }
 
-// NewAlertFromBytes creates a new alert from bytes
-func NewAlertFromBytes(ak []byte, opts ...model.Options) (*AlertMessage, error) {
-	opts = append(opts, model.New())
-	newAlert := NewAlertMessage(opts...)
-	newAlert.SetRawMessage(ak)
-	err := newAlert.ReadRaw()
-	if err != nil {
-		return nil, err
-	}
-
-	// Return alert
-	return newAlert, nil
-}
-
 // GetAlertMessageBySequenceNumber will get the model with the given conditions
 func GetAlertMessageBySequenceNumber(ctx context.Context, sequenceNumber uint32, opts ...model.Options) (*AlertMessage, error) {
 	// Get the record
@@ -337,7 +336,7 @@ func GetAlertMessageBySequenceNumber(ctx context.Context, sequenceNumber uint32,
 		ctx, message, conditions, model.DefaultDatabaseReadTimeout, true, // In-case an update is occurring
 	); err != nil {
 		if errors.Is(err, datastore.ErrNoResults) {
-			return nil, nil
+			return nil, ErrAlertNotFound
 		}
 		return nil, err
 	}
@@ -369,7 +368,7 @@ func GetLatestAlert(ctx context.Context, metadata *model.Metadata, opts ...model
 	); err != nil {
 		return nil, err
 	} else if len(modelItems) == 0 {
-		return nil, nil
+		return nil, ErrLatestAlertNotFound
 	}
 
 	// Return the first item (only item)

@@ -165,7 +165,7 @@ func (s *StreamThread) ProcessSyncMessage(ctx context.Context) error {
 	case err := <-done:
 		return err
 	case <-time.After(time.Minute * 1):
-		return fmt.Errorf("sync from peer %s process timed out after 1 minute", s.peer.String())
+		return fmt.Errorf("%w: peer %s", ErrSyncTimeout, s.peer.String())
 	}
 }
 

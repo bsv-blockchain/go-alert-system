@@ -11,6 +11,7 @@ import (
 // AlertMessageUnbanPeer is the message for unbanned peer
 type AlertMessageUnbanPeer struct {
 	AlertMessage
+
 	Peer         []byte `json:"peer"`
 	PeerLength   uint64 `json:"peer_length"`
 	Reason       []byte `json:"reason"`
@@ -32,7 +33,7 @@ func (a *AlertMessageUnbanPeer) Read(alert []byte) error {
 	for i := uint64(0); i < peerLength; i++ {
 		var b byte
 		if b, err = reader.ReadByte(); err != nil {
-			return fmt.Errorf("failed to read peer: %s", err.Error())
+			return fmt.Errorf("%w: %s", ErrFailedToReadPeerUnban, err.Error())
 		}
 		peer = append(peer, b)
 	}
@@ -48,13 +49,13 @@ func (a *AlertMessageUnbanPeer) Read(alert []byte) error {
 	for i := uint64(0); i < reasonLength; i++ {
 		var b byte
 		if b, err = reader.ReadByte(); err != nil {
-			return fmt.Errorf("failed to read reason: %s", err.Error())
+			return fmt.Errorf("%w: %s", ErrFailedToReadReasonUnban, err.Error())
 		}
 		reason = append(reason, b)
 	}
 
 	if !reader.IsComplete() {
-		return fmt.Errorf("too many bytes in alert message")
+		return ErrTooManyBytesInAlert
 	}
 	a.Reason = reason
 	a.ReasonLength = reasonLength

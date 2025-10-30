@@ -16,6 +16,7 @@ import (
 // AlertMessageSetKeys is the message for setting keys
 type AlertMessageSetKeys struct {
 	AlertMessage
+
 	Keys [][33]byte
 	Hash string
 }
@@ -24,7 +25,7 @@ type AlertMessageSetKeys struct {
 func (a *AlertMessageSetKeys) Read(alert []byte) error {
 	// Check the length
 	if len(alert) != 165 {
-		return fmt.Errorf("alert is not 165 bytes long, got %d bytes, not valid", len(alert))
+		return fmt.Errorf("%w, got %d bytes, not valid", ErrSetKeysAlertInvalidLength, len(alert))
 	}
 	buf := bytes.NewReader(alert[:])
 
@@ -34,7 +35,7 @@ func (a *AlertMessageSetKeys) Read(alert []byte) error {
 		for i := uint64(0); i < 33; i++ {
 			b, err := buf.ReadByte()
 			if err != nil {
-				return fmt.Errorf("failed to read pubKey: %s", err.Error())
+				return fmt.Errorf("%w: %s", ErrFailedToReadPubKey, err.Error())
 			}
 			pubKey = append(pubKey, b)
 		}
