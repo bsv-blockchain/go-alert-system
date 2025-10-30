@@ -48,7 +48,9 @@
             "nestif",
             "gocyclo",
             "wsl_v5",
-            "godot"
+            "godot",
+            "gomoddirectives",
+            "revive"
         ],
         "enable": [
             "asasalint",
@@ -76,7 +78,6 @@
             "goconst",
             "godox",
             "goheader",
-            "gomoddirectives",
             "gosec",
             "gosmopolitan",
             "govet",
@@ -99,7 +100,6 @@
             "protogetter",
             "reassign",
             "recvcheck",
-            "revive",
             "rowserrcheck",
             "spancheck",
             "sqlclosecheck",
@@ -189,9 +189,6 @@
                 "for-loops": false,
                 "range-loops": true,
                 "simple": true
-            },
-            "revive": {
-                "config": ".revive.toml"
             },
             "unparam": {
                 "check-exported": false
