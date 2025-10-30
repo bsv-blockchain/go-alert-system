@@ -1,5 +1,5 @@
 # 🚨 go-alert-system
-> Go microservice for managing alerts and runs alongside Bitcoin SV nodes utilizing RPC
+> Lightweight Go RPC alerting service for Bitcoin SV nodes
 
 <table>
   <thead>
