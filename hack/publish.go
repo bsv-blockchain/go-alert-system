@@ -6,8 +6,8 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"flag"
-	"fmt"
 	"log"
+	"math"
 	"strings"
 	"time"
 
@@ -47,6 +47,12 @@ func main() {
 		panic(err)
 	}
 
+	if *alertTypeFlag > math.MaxUint32 {
+		log.Fatalf("alert type exceeds uint32 maximum")
+	}
+	if *sequenceNumber > math.MaxUint32 {
+		log.Fatalf("sequence number exceeds uint32 maximum")
+	}
 	alertType := models.AlertType(*alertTypeFlag)
 	a := &models.AlertMessage{}
 	switch alertType {
@@ -64,7 +70,7 @@ func main() {
 	case models.AlertTypeFreezeUtxo:
 		a = freezeAlert(*sequenceNumber, model.WithAllDependencies(_appConfig))
 	case models.AlertTypeUnfreezeUtxo:
-		panic(fmt.Errorf("not implemented"))
+		panic(ErrNotImplemented)
 	case models.AlertTypeSetKeys:
 		//publicKeys := strings.Split(*pubKeys, ",")
 		//if len(publicKeys) != 5 {
@@ -81,7 +87,7 @@ func main() {
 	} else {
 		privKeys := strings.Split(*keys, ",")
 		if len(privKeys) != 3 {
-			panic(fmt.Errorf("3 private keys not supplied"))
+			panic(ErrThreePrivateKeysNotSupplied)
 		}
 		if sigs, err = utils.SignWithKeys(a.GetRawData(), privKeys); err != nil {
 			panic(err)
@@ -133,8 +139,14 @@ func InfoAlert(seq uint, msg string, opts ...model.Options) *models.AlertMessage
 	newAlert := models.NewAlertMessage(opts...)
 	newAlert.SetAlertType(models.AlertTypeInformational)
 	newAlert.SetRawMessage([]byte(msg))
+	//nolint:gosec // G115: Safe conversion - seq is validated at command line parsing
 	newAlert.SequenceNumber = uint32(seq)
-	newAlert.SetTimestamp(uint64(time.Now().Second()))
+	sec := time.Now().Second()
+	if sec < 0 {
+		sec = 0
+	}
+	//nolint:gosec // G115: Safe conversion - negative values checked above
+	newAlert.SetTimestamp(uint64(sec))
 	newAlert.SetVersion(0x01)
 
 	newAlert.SerializeData()
@@ -154,8 +166,14 @@ func freezeAlert(seq uint, opts ...model.Options) *models.AlertMessage {
 	newAlert := models.NewAlertMessage(opts...)
 	newAlert.SetAlertType(models.AlertTypeFreezeUtxo)
 	newAlert.SetRawMessage(fund.Serialize())
+	//nolint:gosec // G115: Safe conversion - seq is validated at command line parsing
 	newAlert.SequenceNumber = uint32(seq)
-	newAlert.SetTimestamp(uint64(time.Now().Second()))
+	sec := time.Now().Second()
+	if sec < 0 {
+		sec = 0
+	}
+	//nolint:gosec // G115: Safe conversion - negative values checked above
+	newAlert.SetTimestamp(uint64(sec))
 	newAlert.SetVersion(0x01)
 	newAlert.SerializeData()
 	return newAlert
@@ -170,7 +188,12 @@ func confiscateAlert(seq uint, opts ...model.Options) *models.AlertMessage {
 	}
 	raw := []byte{}
 	enforce := [8]byte{}
-	binary.LittleEndian.PutUint64(enforce[:], uint64(tx.ConfiscationTransaction.EnforceAtHeight))
+	enforceHeight := tx.ConfiscationTransaction.EnforceAtHeight
+	if enforceHeight < 0 {
+		enforceHeight = 0
+	}
+	//nolint:gosec // G115: Safe conversion - negative values checked above
+	binary.LittleEndian.PutUint64(enforce[:], uint64(enforceHeight))
 	raw = append(raw, enforce[:]...)
 	by, _ := hex.DecodeString(tx.ConfiscationTransaction.Hex)
 	raw = append(raw, by...)
@@ -178,8 +201,14 @@ func confiscateAlert(seq uint, opts ...model.Options) *models.AlertMessage {
 	newAlert := models.NewAlertMessage(opts...)
 	newAlert.SetAlertType(models.AlertTypeConfiscateUtxo)
 	newAlert.SetRawMessage(raw)
+	//nolint:gosec // G115: Safe conversion - seq is validated at command line parsing
 	newAlert.SequenceNumber = uint32(seq)
-	newAlert.SetTimestamp(uint64(time.Now().Second()))
+	sec := time.Now().Second()
+	if sec < 0 {
+		sec = 0
+	}
+	//nolint:gosec // G115: Safe conversion - negative values checked above
+	newAlert.SetTimestamp(uint64(sec))
 	newAlert.SetVersion(0x01)
 	newAlert.SerializeData()
 	return newAlert
@@ -256,7 +285,13 @@ func invalidateBlockAlert(seq uint, blockHash string, opts ...model.Options) *mo
 	newAlert := models.NewAlertMessage(opts...)
 	newAlert.SetAlertType(models.AlertTypeInvalidateBlock)
 	newAlert.SetVersion(0x01)
-	newAlert.SetTimestamp(uint64(time.Now().Unix()))
+	unixTime := time.Now().Unix()
+	if unixTime < 0 {
+		unixTime = 0
+	}
+	//nolint:gosec // G115: Safe conversion - negative values checked above
+	newAlert.SetTimestamp(uint64(unixTime))
+	//nolint:gosec // G115: Safe conversion - seq is validated at command line parsing
 	newAlert.SequenceNumber = uint32(seq)
 	newAlert.SetRawMessage(raw)
 	newAlert.SerializeData()
