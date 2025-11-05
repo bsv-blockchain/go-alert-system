@@ -114,7 +114,7 @@ func (m *Model) GetOptions(isNewRecord bool) (opts []Options) {
 		opts = append(opts, New())
 	}
 
-	return
+	return opts
 }
 
 // IsNew returns true if the model is (or was) a new record

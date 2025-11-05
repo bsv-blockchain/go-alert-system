@@ -75,7 +75,7 @@ func NewBaseModel(name Name, opts ...Options) (m *Model) {
 		}
 	}
 
-	return
+	return m
 }
 
 /*
