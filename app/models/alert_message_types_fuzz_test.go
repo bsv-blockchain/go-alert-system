@@ -8,43 +8,81 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Helper functions for fuzz tests
+
+// buildVarIntMessage builds a message from multiple parts, each prefixed with its length as a VarInt
+func buildVarIntMessage(parts ...[]byte) []byte {
+	msg := make([]byte, 0)
+	for _, part := range parts {
+		w := util.NewWriter()
+		w.WriteVarInt(uint64(len(part)))
+		msg = append(msg, w.Buf...)
+		msg = append(msg, part...)
+	}
+	return msg
+}
+
+// addCommonEdgeCases adds standard edge case seeds to the fuzz corpus
+func addCommonEdgeCases(f *testing.F) {
+	f.Add([]byte{})                 // empty
+	f.Add([]byte{0x00})             // zero length
+	f.Add([]byte{0x01, 0x41})       // 1 byte 'A'
+	f.Add([]byte{0x01, 0x41, 0x00}) // with zero terminator
+}
+
+// assertLengthFieldValid validates that a length field matches actual data and doesn't exceed input
+func assertLengthFieldValid(t *testing.T, lengthField uint64, actualData, inputData []byte, fieldName string) {
+	require.LessOrEqual(t, lengthField, uint64(len(inputData)), "%s length should not exceed data length", fieldName)
+	require.Equal(t, lengthField, uint64(len(actualData)), "%s length should match %s data", fieldName, fieldName)
+}
+
+// buildUtxoAlertMessage builds a 57-byte UTXO freeze/unfreeze alert message
+func buildUtxoAlertMessage(vout, startHeight, endHeight uint64, expireFlag byte) []byte {
+	msg := make([]byte, 57)
+	copy(msg[0:32], make([]byte, 32)) // txid (32 bytes zero-filled)
+	binary.LittleEndian.PutUint64(msg[32:40], vout)
+	binary.LittleEndian.PutUint64(msg[40:48], startHeight)
+	binary.LittleEndian.PutUint64(msg[48:56], endHeight)
+	msg[56] = expireFlag
+	return msg
+}
+
+// buildHeightPlusVarIntMessage builds a message with an 8-byte height followed by VarInt-prefixed data
+func buildHeightPlusVarIntMessage(height uint64, data []byte) []byte {
+	heightBytes := make([]byte, 8)
+	binary.LittleEndian.PutUint64(heightBytes[0:8], height)
+	w := util.NewWriter()
+	w.WriteVarInt(uint64(len(data)))
+	msg := make([]byte, 0, 8+len(w.Buf)+len(data))
+	msg = append(msg, heightBytes...)
+	msg = append(msg, w.Buf...)
+	msg = append(msg, data...)
+	return msg
+}
+
+// buildFixedPrefixVarIntMessage builds a message with a fixed prefix followed by VarInt-prefixed data
+func buildFixedPrefixVarIntMessage(prefix, data []byte) []byte {
+	msg := append([]byte(nil), prefix...)
+	w := util.NewWriter()
+	w.WriteVarInt(uint64(len(data)))
+	msg = append(msg, w.Buf...)
+	msg = append(msg, data...)
+	return msg
+}
+
 // FuzzAlertMessageBanPeerRead tests ban peer alert parsing
 func FuzzAlertMessageBanPeerRead(f *testing.F) {
 	// Seed with valid ban peer message: VarInt(peerLen) + peer + VarInt(reasonLen) + reason
-	validMsg := make([]byte, 0)
 	peerData := []byte("192.168.1.1:8333")
 	reasonData := []byte("malicious behavior")
-
-	// Add peer length and data
-	w := util.NewWriter()
-	w.WriteVarInt(uint64(len(peerData)))
-	validMsg = append(validMsg, w.Buf...)
-	validMsg = append(validMsg, peerData...)
-
-	// Add reason length and data
-	w = util.NewWriter()
-	w.WriteVarInt(uint64(len(reasonData)))
-	validMsg = append(validMsg, w.Buf...)
-	validMsg = append(validMsg, reasonData...)
-
+	validMsg := buildVarIntMessage(peerData, reasonData)
 	f.Add(validMsg)
 
 	// Seed with edge cases
-	f.Add([]byte{})                 // empty
-	f.Add([]byte{0x00})             // zero length peer
-	f.Add([]byte{0x01, 0x41})       // 1 byte peer 'A'
-	f.Add([]byte{0x01, 0x41, 0x00}) // peer + zero reason
+	addCommonEdgeCases(f)
 
 	// Seed with large values
-	largeMsg := make([]byte, 0)
-	w = util.NewWriter()
-	w.WriteVarInt(100)
-	largeMsg = append(largeMsg, w.Buf...)
-	largeMsg = append(largeMsg, make([]byte, 100)...) // 100 byte peer
-	w = util.NewWriter()
-	w.WriteVarInt(100)
-	largeMsg = append(largeMsg, w.Buf...)
-	largeMsg = append(largeMsg, make([]byte, 100)...) // 100 byte reason
+	largeMsg := buildVarIntMessage(make([]byte, 100), make([]byte, 100))
 	f.Add(largeMsg)
 
 	f.Fuzz(func(t *testing.T, data []byte) {
@@ -58,37 +96,21 @@ func FuzzAlertMessageBanPeerRead(f *testing.F) {
 		}
 
 		// If successful, validate the parsed data
-		require.LessOrEqual(t, alert.PeerLength, uint64(len(data)), "peer length should not exceed data length")
-		require.LessOrEqual(t, alert.ReasonLength, uint64(len(data)), "reason length should not exceed data length")
-		require.Equal(t, alert.PeerLength, uint64(len(alert.Peer)), "peer length should match peer data")
-		require.Equal(t, alert.ReasonLength, uint64(len(alert.Reason)), "reason length should match reason data")
+		assertLengthFieldValid(t, alert.PeerLength, alert.Peer, data, "peer")
+		assertLengthFieldValid(t, alert.ReasonLength, alert.Reason, data, "reason")
 	})
 }
 
 // FuzzAlertMessageUnbanPeerRead tests unban peer alert parsing
 func FuzzAlertMessageUnbanPeerRead(f *testing.F) {
 	// Seed with valid unban peer message (same structure as ban)
-	validMsg := make([]byte, 0)
 	peerData := []byte("192.168.1.1:8333")
 	reasonData := []byte("false positive")
-
-	w := util.NewWriter()
-	w.WriteVarInt(uint64(len(peerData)))
-	validMsg = append(validMsg, w.Buf...)
-	validMsg = append(validMsg, peerData...)
-
-	w = util.NewWriter()
-	w.WriteVarInt(uint64(len(reasonData)))
-	validMsg = append(validMsg, w.Buf...)
-	validMsg = append(validMsg, reasonData...)
-
+	validMsg := buildVarIntMessage(peerData, reasonData)
 	f.Add(validMsg)
 
 	// Edge cases
-	f.Add([]byte{})
-	f.Add([]byte{0x00})
-	f.Add([]byte{0x01, 0x41})
-	f.Add([]byte{0x01, 0x41, 0x00})
+	addCommonEdgeCases(f)
 
 	f.Fuzz(func(t *testing.T, data []byte) {
 		alert := &AlertMessageUnbanPeer{}
@@ -100,43 +122,28 @@ func FuzzAlertMessageUnbanPeerRead(f *testing.F) {
 		}
 
 		// Validate parsed data
-		require.LessOrEqual(t, alert.PeerLength, uint64(len(data)), "peer length should not exceed data length")
-		require.LessOrEqual(t, alert.ReasonLength, uint64(len(data)), "reason length should not exceed data length")
+		assertLengthFieldValid(t, alert.PeerLength, alert.Peer, data, "peer")
+		assertLengthFieldValid(t, alert.ReasonLength, alert.Reason, data, "reason")
 	})
 }
 
 // FuzzAlertMessageInformationalRead tests informational alert parsing
 func FuzzAlertMessageInformationalRead(f *testing.F) {
 	// Seed with valid informational message
-	validMsg := make([]byte, 0)
 	message := []byte("System maintenance scheduled")
-
-	w := util.NewWriter()
-	w.WriteVarInt(uint64(len(message)))
-	validMsg = append(validMsg, w.Buf...)
-	validMsg = append(validMsg, message...)
-
+	validMsg := buildVarIntMessage(message)
 	f.Add(validMsg)
 
 	// Edge cases
-	f.Add([]byte{})           // empty
-	f.Add([]byte{0x00})       // zero length message
-	f.Add([]byte{0x01, 0x41}) // single character 'A'
+	addCommonEdgeCases(f)
 
 	// Invalid: length exceeds data
-	invalidLen := make([]byte, 0)
-	w = util.NewWriter()
-	w.WriteVarInt(100) // claim 100 bytes
-	invalidLen = append(invalidLen, w.Buf...)
-	invalidLen = append(invalidLen, []byte{0x01}...) // but only 1 byte
+	invalidLen := buildVarIntMessage(make([]byte, 100))
+	invalidLen = append(invalidLen[:len(invalidLen)-99], 0x01) // claim 100 bytes but only 1 byte
 	f.Add(invalidLen)
 
 	// Valid with extra bytes (should trigger IsComplete check)
-	extraBytes := make([]byte, 0)
-	w = util.NewWriter()
-	w.WriteVarInt(5)
-	extraBytes = append(extraBytes, w.Buf...)
-	extraBytes = append(extraBytes, []byte("hello")...)
+	extraBytes := buildVarIntMessage([]byte("hello"))
 	extraBytes = append(extraBytes, []byte("extra")...) // extra bytes
 	f.Add(extraBytes)
 
@@ -150,28 +157,19 @@ func FuzzAlertMessageInformationalRead(f *testing.F) {
 		}
 
 		// Validate successful parse
-		require.Equal(t, alert.MessageLength, uint64(len(alert.Message)), "message length should match message data")
-		require.LessOrEqual(t, alert.MessageLength, uint64(len(data)), "message length should not exceed input data")
+		assertLengthFieldValid(t, alert.MessageLength, alert.Message, data, "message")
 	})
 }
 
 // FuzzAlertMessageFreezeUtxoRead tests freeze UTXO alert parsing
 func FuzzAlertMessageFreezeUtxoRead(f *testing.F) {
 	// Seed with valid freeze message (57 bytes per fund)
-	validMsg := make([]byte, 57)
 	// txid (32 bytes) + vout (8) + start height (8) + end height (8) + expire flag (1) = 57
-	copy(validMsg[0:32], make([]byte, 32))                 // txid
-	binary.LittleEndian.PutUint64(validMsg[32:40], 0)      // vout
-	binary.LittleEndian.PutUint64(validMsg[40:48], 100000) // start height
-	binary.LittleEndian.PutUint64(validMsg[48:56], 200000) // end height
-	validMsg[56] = 1                                       // expire flag
-
+	validMsg := buildUtxoAlertMessage(0, 100000, 200000, 1)
 	f.Add(validMsg)
 
 	// Multiple funds (114 bytes = 2 funds)
-	multipleMsg := make([]byte, 114)
-	copy(multipleMsg[0:57], validMsg)
-	copy(multipleMsg[57:114], validMsg)
+	multipleMsg := append(validMsg, validMsg...)
 	f.Add(multipleMsg)
 
 	// Edge cases
@@ -182,12 +180,7 @@ func FuzzAlertMessageFreezeUtxoRead(f *testing.F) {
 	f.Add(make([]byte, 171)) // 3 funds
 
 	// Test with max int values to trigger overflow check
-	overflowMsg := make([]byte, 57)
-	copy(overflowMsg[0:32], make([]byte, 32))
-	binary.LittleEndian.PutUint64(overflowMsg[32:40], ^uint64(0)) // max uint64 for vout
-	binary.LittleEndian.PutUint64(overflowMsg[40:48], 100000)
-	binary.LittleEndian.PutUint64(overflowMsg[48:56], 200000)
-	overflowMsg[56] = 0
+	overflowMsg := buildUtxoAlertMessage(^uint64(0), 100000, 200000, 0)
 	f.Add(overflowMsg)
 
 	f.Fuzz(func(t *testing.T, data []byte) {
@@ -215,13 +208,7 @@ func FuzzAlertMessageFreezeUtxoRead(f *testing.F) {
 // FuzzAlertMessageUnfreezeUtxoRead tests unfreeze UTXO alert parsing
 func FuzzAlertMessageUnfreezeUtxoRead(f *testing.F) {
 	// Same structure as freeze UTXO (57 bytes per fund)
-	validMsg := make([]byte, 57)
-	copy(validMsg[0:32], make([]byte, 32))
-	binary.LittleEndian.PutUint64(validMsg[32:40], 0)
-	binary.LittleEndian.PutUint64(validMsg[40:48], 100000)
-	binary.LittleEndian.PutUint64(validMsg[48:56], 200000)
-	validMsg[56] = 0
-
+	validMsg := buildUtxoAlertMessage(0, 100000, 200000, 0)
 	f.Add(validMsg)
 	f.Add([]byte{})
 	f.Add(make([]byte, 56))
@@ -246,17 +233,8 @@ func FuzzAlertMessageUnfreezeUtxoRead(f *testing.F) {
 // FuzzAlertMessageConfiscateTransactionRead tests confiscate transaction alert parsing
 func FuzzAlertMessageConfiscateTransactionRead(f *testing.F) {
 	// Seed with valid confiscation message: height(8) + VarInt(hexLen) + hex
-	validMsg := make([]byte, 0)
-	heightBytes := make([]byte, 8)
-	binary.LittleEndian.PutUint64(heightBytes[0:8], 100000) // enforce at height
-	validMsg = append(validMsg, heightBytes...)
-
 	txHex := []byte("0100000001...")
-	w := util.NewWriter()
-	w.WriteVarInt(uint64(len(txHex)))
-	validMsg = append(validMsg, w.Buf...)
-	validMsg = append(validMsg, txHex...)
-
+	validMsg := buildHeightPlusVarIntMessage(100000, txHex)
 	f.Add(validMsg)
 
 	// Edge cases
@@ -265,27 +243,16 @@ func FuzzAlertMessageConfiscateTransactionRead(f *testing.F) {
 	f.Add(make([]byte, 9)) // height + varint start
 
 	// Minimum valid: height + zero-length tx
-	minMsgHeight := make([]byte, 8)
-	binary.LittleEndian.PutUint64(minMsgHeight[0:8], 0)
-	minMsg := append([]byte(nil), minMsgHeight...)
-	minMsg = append(minMsg, 0x00) // zero length varint
+	minMsg := buildHeightPlusVarIntMessage(0, []byte{})
 	f.Add(minMsg)
 
 	// Test max int64 overflow
-	overflowMsgHeight := make([]byte, 8)
-	binary.LittleEndian.PutUint64(overflowMsgHeight[0:8], ^uint64(0)) // max uint64
-	overflowMsg := append([]byte(nil), overflowMsgHeight...)
-	overflowMsg = append(overflowMsg, 0x00)
+	overflowMsg := buildHeightPlusVarIntMessage(^uint64(0), []byte{})
 	f.Add(overflowMsg)
 
 	// Length exceeds data
-	badLenMsgHeight := make([]byte, 8)
-	binary.LittleEndian.PutUint64(badLenMsgHeight[0:8], 100000)
-	w = util.NewWriter()
-	w.WriteVarInt(100) // claim 100 bytes
-	badLenMsg := append([]byte(nil), badLenMsgHeight...)
-	badLenMsg = append(badLenMsg, w.Buf...)
-	badLenMsg = append(badLenMsg, []byte{0x01}...) // but only 1 byte
+	badLenMsg := buildHeightPlusVarIntMessage(100000, make([]byte, 100))
+	badLenMsg = append(badLenMsg[:len(badLenMsg)-99], 0x01) // claim 100 bytes but only 1 byte
 	f.Add(badLenMsg)
 
 	f.Fuzz(func(t *testing.T, data []byte) {
@@ -308,16 +275,9 @@ func FuzzAlertMessageConfiscateTransactionRead(f *testing.F) {
 func FuzzAlertMessageInvalidateBlockRead(f *testing.F) {
 	// Seed with valid invalidate block message: blockHash(32) + VarInt(reasonLen) + reason
 	blockHashBytes := make([]byte, 32)
-	// Fill with a sample block hash
 	copy(blockHashBytes[0:32], []byte("blockhash123456789012345678901"))
-	validMsg := append([]byte(nil), blockHashBytes...)
-
 	reason := []byte("invalid proof of work")
-	w := util.NewWriter()
-	w.WriteVarInt(uint64(len(reason)))
-	validMsg = append(validMsg, w.Buf...)
-	validMsg = append(validMsg, reason...)
-
+	validMsg := buildFixedPrefixVarIntMessage(blockHashBytes, reason)
 	f.Add(validMsg)
 
 	// Edge cases
@@ -327,10 +287,8 @@ func FuzzAlertMessageInvalidateBlockRead(f *testing.F) {
 	f.Add(make([]byte, 33)) // hash + varint start
 
 	// Minimum valid: hash + zero reason
-	minMsgHash := make([]byte, 32)
-	minMsgInvalidate := append([]byte(nil), minMsgHash...)
-	minMsgInvalidate = append(minMsgInvalidate, 0x00) // zero length reason
-	f.Add(minMsgInvalidate)
+	minMsg := buildFixedPrefixVarIntMessage(make([]byte, 32), []byte{})
+	f.Add(minMsg)
 
 	f.Fuzz(func(t *testing.T, data []byte) {
 		alert := &AlertMessageInvalidateBlock{}
@@ -343,7 +301,7 @@ func FuzzAlertMessageInvalidateBlockRead(f *testing.F) {
 
 		// Validate successful parse
 		require.Len(t, alert.BlockHash, 32, "block hash should be 32 bytes")
-		require.Equal(t, alert.ReasonLength, uint64(len(alert.Reason)), "reason length should match reason data")
+		assertLengthFieldValid(t, alert.ReasonLength, alert.Reason, data, "reason")
 	})
 }
 
