@@ -199,6 +199,7 @@ func FuzzAlertMessageFreezeUtxoRead(f *testing.F) {
 		// Validate no overflow occurred
 		for _, fund := range alert.Funds {
 			require.GreaterOrEqual(t, fund.TxOut.Vout, 0, "vout should be non-negative")
+			require.NotEmpty(t, fund.EnforceAtHeight, "EnforceAtHeight should not be empty")
 			require.LessOrEqual(t, fund.EnforceAtHeight[0].Start, int(^uint(0)>>1), "start height should not overflow int")
 			require.LessOrEqual(t, fund.EnforceAtHeight[0].Stop, int(^uint(0)>>1), "end height should not overflow int")
 		}
