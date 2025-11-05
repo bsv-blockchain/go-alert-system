@@ -327,7 +327,7 @@ func splitFunc(data []byte, atEOF bool) (advance int, token []byte, err error) {
 		// skip the delimiter in advancing to the next pair
 		return i + 1, data[0:i], nil
 	}
-	return
+	return advance, token, err
 }
 
 // CloseAll will close all connections to all services
