@@ -90,7 +90,7 @@
 ## 📦 Installation
 
 ### Run from source
-**alert-system** requires a [supported release of Go](https://golang.org/doc/devel/release.html#policy).
+**go-alert-system** requires a [supported release of Go](https://golang.org/doc/devel/release.html#policy).
 
 To run the application, clone this repository locally and run:
 ```shell script
@@ -322,4 +322,4 @@ The most basic way to show your support is to star :star2: the project, or to ra
 
 ## 📝 License
 
-[![License](https://img.shields.io/github/license/bsv-blockchain/go-alert-system.svg?style=flat&v=1)](LICENSE)
+[![License](https://img.shields.io/badge/license-OpenBSV-blue?style=flat&logo=springsecurity&logoColor=white)](LICENSE)
