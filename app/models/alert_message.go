@@ -272,8 +272,8 @@ func (m *AlertMessage) ReadRaw() error {
 		m.SetRawMessage(ak)
 	}
 
-	if len(m.GetRawMessage()) < 16 {
-		// todo DETERMINE ACTUAL PROPER LENGTH
+	if len(m.GetRawMessage()) < 20 {
+		// Minimum length: version(4) + sequence(4) + timestamp(8) + alertType(4) = 20 bytes
 		return ErrAlertTooShort
 	}
 	ak := m.GetRawMessage()
