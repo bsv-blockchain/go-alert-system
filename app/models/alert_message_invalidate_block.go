@@ -21,6 +21,10 @@ type AlertMessageInvalidateBlock struct {
 
 // Read reads the alert
 func (a *AlertMessageInvalidateBlock) Read(alert []byte) error {
+	if len(alert) < 32 {
+		return fmt.Errorf("%w: need at least 32 bytes for block hash, got %d", ErrAlertTooShort, len(alert))
+	}
+
 	blockHash, err := chainhash.NewHash(alert[:32])
 	if err != nil {
 		return err
