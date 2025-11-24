@@ -9,8 +9,8 @@ dmitri.shuralyov.com/state v0.0.0-20180228185332-28bcc343414c/go.mod h1:0PRwlb0D
 filippo.io/edwards25519 v1.1.0 h1:FNf4tywRC1HmFuKW5xopWpigGjJKiJSV0Cqo0cJWDaA=
 filippo.io/edwards25519 v1.1.0/go.mod h1:BxyFTGdWcka3PhytdK4V28tE5sGfRvvvRV7EaN4VDT4=
 git.apache.org/thrift.git v0.0.0-20180902110319-2566ecd5d999/go.mod h1:fPE2ZNJGynbRyZ4dJvy6G277gSllfV2HJqblrnkyeyg=
-github.com/99designs/gqlgen v0.17.82 h1:LIjjEVg171V4iZw93YZUFOavupJSuTIKGG2yVtsZAwM=
-github.com/99designs/gqlgen v0.17.82/go.mod h1:OAIe6FVa2bFsmPgG6SIG+82prReTsqKekS7wgkJyUR4=
+github.com/99designs/gqlgen v0.17.83 h1:LZOd4Of2snK5V22/ZWfBAPa3WoAZkBO70dKXM0ODHQk=
+github.com/99designs/gqlgen v0.17.83/go.mod h1:q6Lb64wknFqNFSbSUGzKRKupklvY/xgNr62g0GGWPB8=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/agnivade/levenshtein v1.2.1 h1:EHBY3UOn1gwdy/VbFwgo4cxecRznFk7fKWN1KOX7eoM=
 github.com/agnivade/levenshtein v1.2.1/go.mod h1:QVVI16kDrtSuwcpd0p1+xMC6Z/VfhtCyDIjcwga4/DU=
