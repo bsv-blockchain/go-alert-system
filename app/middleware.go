@@ -1,9 +1,10 @@
 package app
 
 import (
-	"github.com/bsv-blockchain/go-alert-system/app/config"
 	"github.com/julienschmidt/httprouter"
 	apirouter "github.com/mrz1836/go-api-router"
+
+	"github.com/bsv-blockchain/go-alert-system/app/config"
 )
 
 // NewStack is used for registering routes

@@ -5,9 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/bsv-blockchain/go-sdk/util"
-
 	"github.com/bsv-blockchain/go-bt/v2/chainhash"
+	"github.com/bsv-blockchain/go-sdk/util"
 )
 
 // AlertMessageInvalidateBlock is an invalidate block alert

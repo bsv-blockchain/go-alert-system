@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/julienschmidt/httprouter"
+	apirouter "github.com/mrz1836/go-api-router"
+
 	"github.com/bsv-blockchain/go-alert-system/app"
 	"github.com/bsv-blockchain/go-alert-system/app/models"
 	"github.com/bsv-blockchain/go-alert-system/app/models/model"
-	"github.com/julienschmidt/httprouter"
-	apirouter "github.com/mrz1836/go-api-router"
 )
 
 // HealthResponse is the response for the health endpoint

@@ -3,10 +3,10 @@ package config
 import (
 	"context"
 
+	"github.com/bsv-blockchain/go-bn"
 	"github.com/bsv-blockchain/go-bn/models"
 
 	"github.com/bsv-blockchain/go-alert-system/app/config/mocks"
-	"github.com/bsv-blockchain/go-bn"
 )
 
 // NodeInterface is the interface for a node

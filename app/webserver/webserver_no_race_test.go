@@ -10,10 +10,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/bsv-blockchain/go-alert-system/app/config"
 	"github.com/bsv-blockchain/go-alert-system/app/models"
 	"github.com/bsv-blockchain/go-alert-system/app/p2p"
-	"github.com/stretchr/testify/require"
 )
 
 // TestServer_Shutdown will test the method Shutdown()

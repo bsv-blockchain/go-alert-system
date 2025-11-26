@@ -3,10 +3,11 @@ package models
 import (
 	"context"
 
+	"github.com/mrz1836/go-datastore"
+
 	"github.com/bsv-blockchain/go-alert-system/app/config"
 	"github.com/bsv-blockchain/go-alert-system/app/models/model"
 	"github.com/bsv-blockchain/go-alert-system/utils"
-	"github.com/mrz1836/go-datastore"
 )
 
 // PublicKey is an object representing a public key

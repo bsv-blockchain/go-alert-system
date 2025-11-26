@@ -8,11 +8,12 @@ import (
 	"net/http"
 	"strings"
 
+	apirouter "github.com/mrz1836/go-api-router"
+	"github.com/newrelic/go-agent/v3/integrations/nrhttprouter"
+
 	"github.com/bsv-blockchain/go-alert-system/app/api/base"
 	"github.com/bsv-blockchain/go-alert-system/app/config"
 	p2palert "github.com/bsv-blockchain/go-alert-system/app/p2p"
-	apirouter "github.com/mrz1836/go-api-router"
-	"github.com/newrelic/go-agent/v3/integrations/nrhttprouter"
 )
 
 const (

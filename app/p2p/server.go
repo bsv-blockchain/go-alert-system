@@ -12,10 +12,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/bsv-blockchain/go-alert-system/app/config"
-	"github.com/bsv-blockchain/go-alert-system/app/models"
-	"github.com/bsv-blockchain/go-alert-system/app/models/model"
-	"github.com/bsv-blockchain/go-alert-system/app/webhook"
 	"github.com/libp2p/go-libp2p"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
@@ -30,6 +26,11 @@ import (
 	"github.com/libp2p/go-libp2p/p2p/net/conngater"
 	"github.com/mrz1836/go-datastore"
 	maddr "github.com/multiformats/go-multiaddr"
+
+	"github.com/bsv-blockchain/go-alert-system/app/config"
+	"github.com/bsv-blockchain/go-alert-system/app/models"
+	"github.com/bsv-blockchain/go-alert-system/app/models/model"
+	"github.com/bsv-blockchain/go-alert-system/app/webhook"
 )
 
 // Define an interface to handle topic notifications

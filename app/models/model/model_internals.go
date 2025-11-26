@@ -4,8 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/bsv-blockchain/go-alert-system/app/config"
 	"github.com/mrz1836/go-datastore"
+
+	"github.com/bsv-blockchain/go-alert-system/app/config"
 )
 
 // AfterCreated will fire after the model is created in the Datastore

@@ -6,10 +6,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/bsv-blockchain/go-alert-system/app/config"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/multiformats/go-multiaddr"
+
+	"github.com/bsv-blockchain/go-alert-system/app/config"
 )
 
 // initDHT will initialize the DHT

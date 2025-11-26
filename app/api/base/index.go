@@ -7,11 +7,10 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/bsv-blockchain/go-alert-system/app/models/model"
+	"github.com/julienschmidt/httprouter"
 
 	"github.com/bsv-blockchain/go-alert-system/app/models"
-
-	"github.com/julienschmidt/httprouter"
+	"github.com/bsv-blockchain/go-alert-system/app/models/model"
 )
 
 //go:embed ui/templates/*

@@ -8,12 +8,12 @@ import (
 	"time"
 
 	"github.com/bsv-blockchain/go-sdk/util"
+	"github.com/libp2p/go-libp2p/core/network"
+	"github.com/libp2p/go-libp2p/core/peer"
 
 	"github.com/bsv-blockchain/go-alert-system/app/config"
 	"github.com/bsv-blockchain/go-alert-system/app/models"
 	"github.com/bsv-blockchain/go-alert-system/app/models/model"
-	"github.com/libp2p/go-libp2p/core/network"
-	"github.com/libp2p/go-libp2p/core/peer"
 )
 
 // Thread is an interface for a thread

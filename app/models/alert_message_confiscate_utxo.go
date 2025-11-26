@@ -8,9 +8,8 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/bsv-blockchain/go-sdk/util"
-
 	"github.com/bsv-blockchain/go-bn/models"
+	"github.com/bsv-blockchain/go-sdk/util"
 )
 
 // AlertMessageConfiscateTransaction is a confiscate utxo alert

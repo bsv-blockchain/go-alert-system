@@ -10,10 +10,11 @@ import (
 	"github.com/bitcoinschema/go-bitcoin"
 	"github.com/bitcoinsv/bsvd/bsvec"
 	"github.com/bitcoinsv/bsvutil"
-	"github.com/bsv-blockchain/go-alert-system/app/models/model"
-	"github.com/bsv-blockchain/go-alert-system/utils"
 	"github.com/bsv-blockchain/go-bt/v2/chainhash"
 	"github.com/mrz1836/go-datastore"
+
+	"github.com/bsv-blockchain/go-alert-system/app/models/model"
+	"github.com/bsv-blockchain/go-alert-system/utils"
 )
 
 // AlertMessage is an object representing an alert message

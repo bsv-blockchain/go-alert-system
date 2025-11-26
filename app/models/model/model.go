@@ -6,9 +6,10 @@ import (
 	"log"
 	"time"
 
-	"github.com/bsv-blockchain/go-alert-system/app/config"
 	"github.com/mrz1836/go-datastore"
 	customTypes "github.com/mrz1836/go-datastore/custom_types"
+
+	"github.com/bsv-blockchain/go-alert-system/app/config"
 )
 
 // Model is the generic model field(s) and interface(s)

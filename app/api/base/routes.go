@@ -3,10 +3,11 @@ package base
 import (
 	"net/http"
 
+	apirouter "github.com/mrz1836/go-api-router"
+
 	"github.com/bsv-blockchain/go-alert-system/app"
 	"github.com/bsv-blockchain/go-alert-system/app/config"
 	"github.com/bsv-blockchain/go-alert-system/app/p2p"
-	apirouter "github.com/mrz1836/go-api-router"
 )
 
 // Action is an extension of app.Action for this package

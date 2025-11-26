@@ -4,10 +4,11 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/bsv-blockchain/go-alert-system/app/config"
 	"github.com/julienschmidt/httprouter"
 	apirouter "github.com/mrz1836/go-api-router"
 	"github.com/stretchr/testify/require"
+
+	"github.com/bsv-blockchain/go-alert-system/app/config"
 )
 
 func testHandle(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {

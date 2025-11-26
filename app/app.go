@@ -4,10 +4,10 @@ package app
 import (
 	"net/http"
 
-	"github.com/bsv-blockchain/go-alert-system/app/p2p"
+	apirouter "github.com/mrz1836/go-api-router"
 
 	"github.com/bsv-blockchain/go-alert-system/app/config"
-	apirouter "github.com/mrz1836/go-api-router"
+	"github.com/bsv-blockchain/go-alert-system/app/p2p"
 )
 
 // Action is the configuration for the actions and related services

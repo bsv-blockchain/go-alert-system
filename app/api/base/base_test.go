@@ -5,9 +5,10 @@ import (
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+
 	"github.com/bsv-blockchain/go-alert-system/app/config"
 	"github.com/bsv-blockchain/go-alert-system/app/models"
-	"github.com/stretchr/testify/suite"
 )
 
 // TestSuite is for testing the entire package using real/mocked services

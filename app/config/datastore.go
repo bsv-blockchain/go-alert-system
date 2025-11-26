@@ -3,9 +3,8 @@ package config
 import (
 	"context"
 
-	"github.com/mrz1836/go-logger"
-
 	"github.com/mrz1836/go-datastore"
+	"github.com/mrz1836/go-logger"
 )
 
 // loadDatastore will load an instance of Datastore into the dependencies

@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/hex"
 
-	"github.com/bsv-blockchain/go-alert-system/app/models/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/bsv-blockchain/go-alert-system/app/models/model"
 )
 
 const (

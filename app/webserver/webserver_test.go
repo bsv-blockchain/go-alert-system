@@ -5,11 +5,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/bsv-blockchain/go-alert-system/app/p2p"
-
-	"github.com/bsv-blockchain/go-alert-system/app/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/bsv-blockchain/go-alert-system/app/config"
+	"github.com/bsv-blockchain/go-alert-system/app/p2p"
 )
 
 // TestNewServer will test the method NewServer()

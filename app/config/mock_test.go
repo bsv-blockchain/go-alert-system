@@ -4,8 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/bsv-blockchain/go-alert-system/app/config/mocks"
 	"github.com/stretchr/testify/require"
+
+	"github.com/bsv-blockchain/go-alert-system/app/config/mocks"
 )
 
 // TestBanPeer tests the BanPeer method

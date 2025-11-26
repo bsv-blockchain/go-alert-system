@@ -9,8 +9,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/bsv-blockchain/go-alert-system/app/models/model"
 	"github.com/mrz1836/go-datastore"
+
+	"github.com/bsv-blockchain/go-alert-system/app/models/model"
 )
 
 // AlertMessageSetKeys is the message for setting keys
