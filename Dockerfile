@@ -10,7 +10,7 @@ COPY go.sum go.sum
 RUN CGO_ENABLED=0 go build -a -o $APP_ROOT/src/go-alert-system github.com/bsv-blockchain/go-alert-system/cmd/go-alert-system
 
 # Copy the controller-manager into a thin image
-FROM registry.access.redhat.com/ubi9-minimal:9.7@sha256:61d5ad475048c2e655cd46d0a55dfeaec182cc3faa6348cb85989a7c9e196483
+FROM registry.access.redhat.com/ubi9-minimal:9.7@sha256:161a4e29ea482bab6048c2b36031b4f302ae81e4ff18b83e61785f40dc576f5d
 WORKDIR /
 RUN mkdir /.bitcoin
 RUN touch /.bitcoin/alert_system_private_key
