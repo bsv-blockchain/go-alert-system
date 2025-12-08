@@ -37,8 +37,8 @@ github.com/bsv-blockchain/go-bn v1.1.1 h1:aKOdpaIvf+UAOFn03GfH+ZfWbu7kWtZjgNBRJA
 github.com/bsv-blockchain/go-bn v1.1.1/go.mod h1:sJ/T10Tl12CCCuH1Xg3eZDGQHrEf7rg6wiou9rBH8wU=
 github.com/bsv-blockchain/go-bt/v2 v2.5.1 h1:FM5JfBwzmBSlgrlR2vJPMZqbZ21uzQE3mT0irCZiOds=
 github.com/bsv-blockchain/go-bt/v2 v2.5.1/go.mod h1:PRmOtffMuHE1LZyRrb5rWQQ6dEEct2x68cvnsS7ka/4=
-github.com/bsv-blockchain/go-sdk v1.2.12 h1:t/50ONqCTgumJH82YbQ8iqdo30ezIACyuFgvyHbkX9A=
-github.com/bsv-blockchain/go-sdk v1.2.12/go.mod h1:1FWCWH+x6xc1kH9r6tuyRQqUomfrLBOQfdPesJZK/1k=
+github.com/bsv-blockchain/go-sdk v1.2.13 h1:jcIff1WWAchtgxHJO80Y57LbxmwUG0rS48pmY6SvgnM=
+github.com/bsv-blockchain/go-sdk v1.2.13/go.mod h1:HugEqK6K46nUAN0Xr9xq0HW8QHtpJmAg05NmcxPc1Lk=
 github.com/buger/jsonparser v0.0.0-20181115193947-bf1c66bbce23/go.mod h1:bbYlZJ7hK1yFx9hf58LP0zeX7UjIGs20ufpu3evjr+s=
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=
 github.com/cespare/xxhash/v2 v2.3.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
