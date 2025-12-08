@@ -15,7 +15,7 @@ require (
 	github.com/libp2p/go-libp2p-kad-dht v0.36.0
 	github.com/libp2p/go-libp2p-pubsub v0.15.0
 	github.com/mrz1836/go-api-router v1.0.4
-	github.com/mrz1836/go-datastore v1.0.6
+	github.com/mrz1836/go-datastore v1.0.7
 	github.com/mrz1836/go-logger v1.0.0
 	github.com/multiformats/go-multiaddr v0.16.1
 	github.com/newrelic/go-agent/v3/integrations/nrhttprouter v1.1.5
@@ -73,7 +73,7 @@ require (
 	github.com/jbenet/go-temp-err-catcher v0.1.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
-	github.com/klauspost/compress v1.18.1 // indirect
+	github.com/klauspost/compress v1.18.2 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/koron/go-ssdp v0.1.0 // indirect
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
@@ -179,7 +179,7 @@ require (
 	golang.org/x/time v0.14.0 // indirect
 	golang.org/x/tools v0.39.0 // indirect
 	gonum.org/v1/gonum v0.16.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20251124214823-79d6a2a48846 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20251202230838-ff82c1b0f217 // indirect
 	google.golang.org/grpc v1.77.0 // indirect
 	google.golang.org/protobuf v1.36.10 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
