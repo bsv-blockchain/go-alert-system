@@ -15,7 +15,7 @@ require (
 	github.com/libp2p/go-libp2p-kad-dht v0.36.0
 	github.com/libp2p/go-libp2p-pubsub v0.15.0
 	github.com/mrz1836/go-api-router v1.0.5
-	github.com/mrz1836/go-datastore v1.0.7
+	github.com/mrz1836/go-datastore v1.2.1
 	github.com/mrz1836/go-logger v1.0.0
 	github.com/multiformats/go-multiaddr v0.16.1
 	github.com/newrelic/go-agent/v3/integrations/nrhttprouter v1.1.5
@@ -178,9 +178,9 @@ require (
 	golang.org/x/time v0.14.0 // indirect
 	golang.org/x/tools v0.40.0 // indirect
 	gonum.org/v1/gonum v0.16.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20251202230838-ff82c1b0f217 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20251213004720-97cd9d5aeac2 // indirect
 	google.golang.org/grpc v1.77.0 // indirect
-	google.golang.org/protobuf v1.36.10 // indirect
+	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/mysql v1.6.0 // indirect
 	gorm.io/driver/postgres v1.6.0 // indirect
