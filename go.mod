@@ -11,11 +11,11 @@ require (
 	github.com/bsv-blockchain/go-bt/v2 v2.5.1
 	github.com/bsv-blockchain/go-sdk v1.2.13
 	github.com/julienschmidt/httprouter v1.3.0
-	github.com/libp2p/go-libp2p v0.45.0
+	github.com/libp2p/go-libp2p v0.46.0
 	github.com/libp2p/go-libp2p-kad-dht v0.36.0
 	github.com/libp2p/go-libp2p-pubsub v0.15.0
 	github.com/mrz1836/go-api-router v1.0.5
-	github.com/mrz1836/go-datastore v1.0.7
+	github.com/mrz1836/go-datastore v1.2.1
 	github.com/mrz1836/go-logger v1.0.0
 	github.com/multiformats/go-multiaddr v0.16.1
 	github.com/newrelic/go-agent/v3/integrations/nrhttprouter v1.1.5
@@ -40,7 +40,6 @@ require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/filecoin-project/go-clock v0.1.0 // indirect
 	github.com/flynn/noise v1.1.0 // indirect
-	github.com/francoispqt/gojay v1.2.13 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/glebarez/go-sqlite v1.22.0 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
@@ -138,8 +137,8 @@ require (
 	github.com/prometheus/client_model v0.6.2 // indirect
 	github.com/prometheus/common v0.67.4 // indirect
 	github.com/prometheus/procfs v0.19.2 // indirect
-	github.com/quic-go/qpack v0.5.1 // indirect
-	github.com/quic-go/quic-go v0.55.0 // indirect
+	github.com/quic-go/qpack v0.6.0 // indirect
+	github.com/quic-go/quic-go v0.57.1 // indirect
 	github.com/quic-go/webtransport-go v0.9.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/sagikazarmark/locafero v0.12.0 // indirect
@@ -179,9 +178,9 @@ require (
 	golang.org/x/time v0.14.0 // indirect
 	golang.org/x/tools v0.40.0 // indirect
 	gonum.org/v1/gonum v0.16.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20251202230838-ff82c1b0f217 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20251213004720-97cd9d5aeac2 // indirect
 	google.golang.org/grpc v1.77.0 // indirect
-	google.golang.org/protobuf v1.36.10 // indirect
+	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/mysql v1.6.0 // indirect
 	gorm.io/driver/postgres v1.6.0 // indirect
