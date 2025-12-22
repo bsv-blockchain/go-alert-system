@@ -16,7 +16,7 @@ require (
 	github.com/libp2p/go-libp2p-pubsub v0.15.0
 	github.com/mrz1836/go-api-router v1.0.7
 	github.com/mrz1836/go-datastore v1.2.1
-	github.com/mrz1836/go-logger v1.0.1
+	github.com/mrz1836/go-logger v1.0.2
 	github.com/multiformats/go-multiaddr v0.16.1
 	github.com/newrelic/go-agent/v3/integrations/nrhttprouter v1.1.5
 	github.com/pkg/errors v0.9.1
