@@ -20,7 +20,7 @@ import (
 // inhibiting future peer discovery.
 func (s *Server) initDHT(ctx context.Context) (*dht.IpfsDHT, error) {
 	logger := s.config.Services.Log
-	var options []dht.Option
+	options := make([]dht.Option, 0, 2)
 	mode := dht.ModeAutoServer
 	if s.config.P2P.DHTMode == "client" {
 		mode = dht.ModeClient

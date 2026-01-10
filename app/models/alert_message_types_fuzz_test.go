@@ -12,7 +12,12 @@ import (
 
 // buildVarIntMessage builds a message from multiple parts, each prefixed with its length as a VarInt
 func buildVarIntMessage(parts ...[]byte) []byte {
-	msg := make([]byte, 0)
+	// Estimate capacity: each part has up to 9 bytes for VarInt + the part data
+	totalLen := 0
+	for _, part := range parts {
+		totalLen += 9 + len(part) // max VarInt size + data
+	}
+	msg := make([]byte, 0, totalLen)
 	for _, part := range parts {
 		w := util.NewWriter()
 		w.WriteVarInt(uint64(len(part)))

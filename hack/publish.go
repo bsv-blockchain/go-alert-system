@@ -187,7 +187,7 @@ func confiscateAlert(seq uint, opts ...model.Options) *models.AlertMessage {
 			EnforceAtHeight: 10000,
 		},
 	}
-	raw := []byte{}
+	raw := make([]byte, 0, 64)
 	enforce := [8]byte{}
 	enforceHeight := tx.ConfiscationTransaction.EnforceAtHeight
 	if enforceHeight < 0 {
@@ -278,7 +278,7 @@ func invalidateBlockAlert(seq uint, blockHash string, opts ...model.Options) *mo
 	if err != nil {
 		panic(err)
 	}
-	raw := []byte{}
+	raw := make([]byte, 0, len(hash)+8)
 
 	opts = append(opts, model.New())
 	raw = append(raw, hash...)
