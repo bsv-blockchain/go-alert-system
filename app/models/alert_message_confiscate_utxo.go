@@ -31,7 +31,7 @@ func (a *AlertMessageConfiscateTransaction) Read(raw []byte) error {
 		return ErrConfiscationAlertTooShort
 	}
 	// TODO: assume for now only 1 confiscation tx in the alert for simplicity
-	var details []models.ConfiscationTransactionDetails
+	details := make([]models.ConfiscationTransactionDetails, 0, 1)
 	enforceAtHeight := binary.LittleEndian.Uint64(raw[0:8])
 	reader := util.NewReader(raw[8:])
 

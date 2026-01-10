@@ -16,7 +16,7 @@ func TestAlertMessageUnbanPeerRead(t *testing.T) {
 		reason := []byte("test")
 
 		// Encode the lengths of peer and reason using binary.Write
-		payload := make([]byte, 0)
+		payload := make([]byte, 0, 2+len(peer)+2+len(reason))
 		payload = append(payload, encodeVarInt(uint64(len(peer)))...)
 		payload = append(payload, peer...)
 		payload = append(payload, encodeVarInt(uint64(len(reason)))...)
@@ -105,7 +105,7 @@ func TestAlertMessageUnbanPeerRead(t *testing.T) {
 		reason := []byte("test")
 
 		// Encode the lengths of peer and reason using binary.Write
-		payload := make([]byte, 0)
+		payload := make([]byte, 0, 2+len(peer)+2+len(reason))
 		payload = append(payload, encodeVarInt(uint64(len(peer)))...)
 		payload = append(payload, peer...)
 		payload = append(payload, encodeVarInt(uint64(len(reason)))...)
