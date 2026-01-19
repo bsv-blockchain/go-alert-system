@@ -12,7 +12,7 @@ require (
 	github.com/bsv-blockchain/go-sdk v1.2.14
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/libp2p/go-libp2p v0.46.0
-	github.com/libp2p/go-libp2p-kad-dht v0.36.0
+	github.com/libp2p/go-libp2p-kad-dht v0.37.0
 	github.com/libp2p/go-libp2p-pubsub v0.15.0
 	github.com/mrz1836/go-api-router v1.0.7
 	github.com/mrz1836/go-datastore v1.2.3
