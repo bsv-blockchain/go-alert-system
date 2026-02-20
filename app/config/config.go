@@ -75,7 +75,7 @@ type (
 		AutoMigrate bool                    `json:"auto_migrate" mapstructure:"auto_migrate"` // Loads a blank database
 		Debug       bool                    `json:"debug" mapstructure:"debug"`               // True for SQL statements
 		Engine      datastore.Engine        `json:"engine" mapstructure:"engine"`             // MySQL, Postgres, SQLite
-		Password    string                  `json:"password" mapstructure:"password"`         // Used for MySQL or Postgresql
+		Password    string                  `json:"password" mapstructure:"password"`         //nolint:gosec // G117: Password field is a configuration value, not an exposed credential
 		SQLite      *datastore.SQLiteConfig `json:"sqlite" mapstructure:"sqlite"`             // Configuration for SQLite
 		SQLRead     *datastore.SQLConfig    `json:"sql_read" mapstructure:"sql_read"`         // Configuration for MySQL or Postgres
 		SQLWrite    *datastore.SQLConfig    `json:"sql_write" mapstructure:"sql_write"`       // Configuration for MySQL or Postgres
@@ -104,7 +104,7 @@ type (
 		Port                  string        `json:"port" mapstructure:"port"`                                             // Port is the port for the P2P server
 		AllowPrivateIPs       bool          `json:"allow_private_ip_addresses" mapstructure:"allow_private_ip_addresses"` // AllowPrivateIPs will disable the default behavior of filtering out private IP addresses
 		PrivateKeyPath        string        `json:"private_key_path" mapstructure:"private_key_path"`                     // PrivateKeyPath is the path to the private key
-		PrivateKey            string        `json:"private_key" mapstructure:"private_key"`                               // PrivateKey is a hex encoded private key to use directly
+		PrivateKey            string        `json:"private_key" mapstructure:"private_key"`                               //nolint:gosec // G117: PrivateKey field is a configuration value, not an exposed credential
 		TopicName             string        `json:"topic_name" mapstructure:"topic_name"`                                 // TopicName is the name of the topic to subscribe to
 		PeerDiscoveryInterval time.Duration `json:"peer_discovery_interval" mapstructure:"peer_discovery_interval"`       // PeerDiscoveryInterval is the interval in which we will refresh the peer table and check peers for missing messages
 	}
@@ -112,7 +112,7 @@ type (
 	// RPCConfig is the configuration for the RPC client
 	RPCConfig struct {
 		Host     string `json:"host" mapstructure:"host"`         // Host is the RPC host
-		Password string `json:"password" mapstructure:"password"` // Password is the RPC password
+		Password string `json:"password" mapstructure:"password"` //nolint:gosec // G117: Password field is a configuration value, not an exposed credential
 		User     string `json:"user" mapstructure:"user"`         // User is the RPC username
 	}
 

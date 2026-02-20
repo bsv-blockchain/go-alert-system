@@ -54,7 +54,7 @@ func main() {
 	if *sequenceNumber > math.MaxUint32 {
 		log.Fatalf("sequence number exceeds uint32 maximum")
 	}
-	alertType := models.AlertType(*alertTypeFlag)
+	alertType := models.AlertType(*alertTypeFlag) //nolint:gosec // G115: Safe conversion - overflow validated above
 	a := &models.AlertMessage{}
 	switch alertType {
 	case models.AlertTypeInformational:
@@ -146,7 +146,6 @@ func InfoAlert(seq uint, msg string, opts ...model.Options) *models.AlertMessage
 	if sec < 0 {
 		sec = 0
 	}
-	//nolint:gosec // G115: Safe conversion - negative values checked above
 	newAlert.SetTimestamp(uint64(sec))
 	newAlert.SetVersion(0x01)
 
@@ -173,7 +172,6 @@ func freezeAlert(seq uint, opts ...model.Options) *models.AlertMessage {
 	if sec < 0 {
 		sec = 0
 	}
-	//nolint:gosec // G115: Safe conversion - negative values checked above
 	newAlert.SetTimestamp(uint64(sec))
 	newAlert.SetVersion(0x01)
 	newAlert.SerializeData()
@@ -193,7 +191,6 @@ func confiscateAlert(seq uint, opts ...model.Options) *models.AlertMessage {
 	if enforceHeight < 0 {
 		enforceHeight = 0
 	}
-	//nolint:gosec // G115: Safe conversion - negative values checked above
 	binary.LittleEndian.PutUint64(enforce[:], uint64(enforceHeight))
 	raw = append(raw, enforce[:]...)
 	by, _ := hex.DecodeString(tx.ConfiscationTransaction.Hex)
@@ -208,7 +205,6 @@ func confiscateAlert(seq uint, opts ...model.Options) *models.AlertMessage {
 	if sec < 0 {
 		sec = 0
 	}
-	//nolint:gosec // G115: Safe conversion - negative values checked above
 	newAlert.SetTimestamp(uint64(sec))
 	newAlert.SetVersion(0x01)
 	newAlert.SerializeData()
@@ -290,7 +286,6 @@ func invalidateBlockAlert(seq uint, blockHash string, opts ...model.Options) *mo
 	if unixTime < 0 {
 		unixTime = 0
 	}
-	//nolint:gosec // G115: Safe conversion - negative values checked above
 	newAlert.SetTimestamp(uint64(unixTime))
 	//nolint:gosec // G115: Safe conversion - seq is validated at command line parsing
 	newAlert.SequenceNumber = uint32(seq)
