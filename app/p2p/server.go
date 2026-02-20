@@ -200,7 +200,7 @@ func GetPublicIP(ctx context.Context) (string, error) {
 		return "", err
 	}
 
-	resp, err := client.Do(req)
+	resp, err := client.Do(req) //nolint:gosec // G704: URL is a hardcoded constant (ifconfig.me), not user-controlled
 	if err != nil {
 		return "", err
 	}

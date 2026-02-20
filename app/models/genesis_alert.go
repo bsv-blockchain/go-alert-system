@@ -48,7 +48,6 @@ func CreateGenesisAlert(ctx context.Context, opts ...model.Options) error {
 	if genesisTime < 0 {
 		genesisTime = 0
 	}
-	//nolint:gosec // G115: Safe conversion - negative values checked above
 	newAlert.timestamp = uint64(genesisTime)
 	newAlert.version = 1
 	newAlert.Processed = true
