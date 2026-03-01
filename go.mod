@@ -8,14 +8,14 @@ require (
 	github.com/bitcoinsv/bsvd v0.0.0-20190609155523-4c29707f7173
 	github.com/bitcoinsv/bsvutil v0.0.0-20181216182056-1d77cf353ea9
 	github.com/bsv-blockchain/go-bn v1.1.3
-	github.com/bsv-blockchain/go-bt/v2 v2.5.3
+	github.com/bsv-blockchain/go-bt/v2 v2.6.0
 	github.com/bsv-blockchain/go-sdk v1.2.18
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/libp2p/go-libp2p v0.47.0
 	github.com/libp2p/go-libp2p-kad-dht v0.38.0
 	github.com/libp2p/go-libp2p-pubsub v0.15.0
-	github.com/mrz1836/go-api-router v1.0.10
-	github.com/mrz1836/go-datastore v1.2.5
+	github.com/mrz1836/go-api-router v1.0.11
+	github.com/mrz1836/go-datastore v1.2.6
 	github.com/mrz1836/go-logger v1.0.4
 	github.com/multiformats/go-multiaddr v0.16.1
 	github.com/newrelic/go-agent/v3/integrations/nrhttprouter v1.1.5
@@ -36,7 +36,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/davidlazar/go-crypto v0.0.0-20200604182044-b73af7476f6c // indirect
-	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.0 // indirect
+	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.1 // indirect
 	github.com/dunglas/httpsfv v1.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/filecoin-project/go-clock v0.1.0 // indirect
@@ -130,19 +130,19 @@ require (
 	github.com/pion/transport/v2 v2.2.10 // indirect
 	github.com/pion/transport/v4 v4.0.1 // indirect
 	github.com/pion/turn/v4 v4.1.4 // indirect
-	github.com/pion/webrtc/v4 v4.2.8 // indirect
+	github.com/pion/webrtc/v4 v4.2.9 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/polydawn/refmt v0.89.1-0.20231129105047-37766d95467a // indirect
 	github.com/prometheus/client_golang v1.23.2 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
 	github.com/prometheus/common v0.67.5 // indirect
-	github.com/prometheus/procfs v0.19.2 // indirect
+	github.com/prometheus/procfs v0.20.1 // indirect
 	github.com/quic-go/qpack v0.6.0 // indirect
 	github.com/quic-go/quic-go v0.59.0 // indirect
 	github.com/quic-go/webtransport-go v0.10.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/sagikazarmark/locafero v0.12.0 // indirect
-	github.com/sosodev/duration v1.3.1 // indirect
+	github.com/sosodev/duration v1.4.0 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
 	github.com/spf13/cast v1.10.0 // indirect
@@ -170,7 +170,7 @@ require (
 	golang.org/x/crypto v0.48.0 // indirect
 	golang.org/x/exp v0.0.0-20260218203240-3dfff04db8fa // indirect
 	golang.org/x/mod v0.33.0 // indirect
-	golang.org/x/net v0.50.0 // indirect
+	golang.org/x/net v0.51.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
 	golang.org/x/sys v0.41.0 // indirect
 	golang.org/x/telemetry v0.0.0-20260213145524-e0ab670178e1 // indirect
@@ -178,7 +178,7 @@ require (
 	golang.org/x/time v0.14.0 // indirect
 	golang.org/x/tools v0.42.0 // indirect
 	gonum.org/v1/gonum v0.17.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260217215200-42d3e9bedb6d // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260226221140-a57be14db171 // indirect
 	google.golang.org/grpc v1.79.1 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
@@ -186,7 +186,7 @@ require (
 	gorm.io/driver/postgres v1.6.0 // indirect
 	gorm.io/plugin/dbresolver v1.6.2 // indirect
 	lukechampine.com/blake3 v1.4.1 // indirect
-	modernc.org/libc v1.68.0 // indirect
+	modernc.org/libc v1.68.1 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 	modernc.org/sqlite v1.46.1 // indirect
