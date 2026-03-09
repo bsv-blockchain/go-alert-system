@@ -11,7 +11,7 @@ import (
 
 // TestHead will test the method Head()
 func TestHead(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 	w := httptest.NewRecorder()
 
 	// Fire the request
@@ -34,7 +34,7 @@ func TestHead(t *testing.T) {
 // TestNotFound will test the method NotFound()
 func TestNotFound(t *testing.T) {
 	path := "/unknown-target"
-	req := httptest.NewRequest(http.MethodGet, path, nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, path, nil)
 	w := httptest.NewRecorder()
 
 	// Fire the request
@@ -56,7 +56,7 @@ func TestNotFound(t *testing.T) {
 
 // TestMethodNotAllowed will test the method MethodNotAllowed()
 func TestMethodNotAllowed(t *testing.T) {
-	req := httptest.NewRequest(http.MethodConnect, "/", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodConnect, "/", nil)
 	w := httptest.NewRecorder()
 
 	// Fire the request

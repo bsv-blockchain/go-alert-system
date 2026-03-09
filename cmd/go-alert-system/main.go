@@ -53,6 +53,7 @@ func main() {
 	webServer := webserver.NewServer(_appConfig, p2pServer)
 
 	ctx, cancelFunc := context.WithCancel(context.Background())
+	defer cancelFunc()
 	// Start the p2p server
 	if err = p2pServer.Start(ctx); err != nil {
 		_appConfig.Services.Log.Fatalf("error starting p2p server: %s", err.Error())
