@@ -200,7 +200,7 @@ func GetPublicIP(ctx context.Context) (string, error) {
 		return "", err
 	}
 
-	resp, err := client.Do(req) //nolint:gosec // G704: URL is a hardcoded constant (ifconfig.me), not user-controlled
+	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
 	}
@@ -483,6 +483,9 @@ func (s *Server) Subscribe(ctx context.Context, subscriber *pubsub.Subscription,
 
 		msg, err := subscriber.Next(ctx)
 		if err != nil {
+			if ctx.Err() != nil {
+				return
+			}
 			s.config.Services.Log.Infof("error subscribing via next: %s", err.Error())
 			continue
 		}
