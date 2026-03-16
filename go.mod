@@ -7,8 +7,8 @@ require (
 	github.com/bitcoinschema/go-bitcoin v0.3.20
 	github.com/bitcoinsv/bsvd v0.0.0-20190609155523-4c29707f7173
 	github.com/bitcoinsv/bsvutil v0.0.0-20181216182056-1d77cf353ea9
-	github.com/bsv-blockchain/go-bn v1.1.3
-	github.com/bsv-blockchain/go-bt/v2 v2.6.0
+	github.com/bsv-blockchain/go-bn v1.1.4
+	github.com/bsv-blockchain/go-bt/v2 v2.6.1
 	github.com/bsv-blockchain/go-sdk v1.2.18
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/libp2p/go-libp2p v0.47.0
@@ -171,7 +171,7 @@ require (
 	golang.org/x/exp v0.0.0-20260218203240-3dfff04db8fa // indirect
 	golang.org/x/mod v0.33.0 // indirect
 	golang.org/x/net v0.51.0 // indirect
-	golang.org/x/sync v0.19.0 // indirect
+	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.41.0 // indirect
 	golang.org/x/telemetry v0.0.0-20260213145524-e0ab670178e1 // indirect
 	golang.org/x/text v0.34.0 // indirect
