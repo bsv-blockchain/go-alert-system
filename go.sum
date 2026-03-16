@@ -69,10 +69,10 @@ github.com/bitcoinsv/bsvutil v0.0.0-20181216182056-1d77cf353ea9/go.mod h1:p44KuN
 github.com/bketelsen/crypt v0.0.4/go.mod h1:aI6NrJ0pMGgvZKL1iVgXLnfIFJtfV+bKCoqOes/6LfM=
 github.com/bsv-blockchain/go-bc v1.1.4 h1:nUQX+211md0X7Sl3mTokfeHvLRJfs1r+WXxhPvwFSQY=
 github.com/bsv-blockchain/go-bc v1.1.4/go.mod h1:58BX/TFonX2q8DUc+yBArUWb13z4lJCunzxxsO9tyXM=
-github.com/bsv-blockchain/go-bn v1.1.3 h1:eHqPlBxDy4eKIYkcWWjOzclDwxdLcwymVL03PMWD0yI=
-github.com/bsv-blockchain/go-bn v1.1.3/go.mod h1:UukAHRbRJnwiuc+PERugZe19FMPHzIYV+lg5v0xzrQk=
-github.com/bsv-blockchain/go-bt/v2 v2.6.0 h1:sac1aqOEC82z+WO1/oMlhWA3mtJ/X2LQ1TzT6nJwNeM=
-github.com/bsv-blockchain/go-bt/v2 v2.6.0/go.mod h1:npGAU4KG2iL9X/mKWqovMdb6ME5DIz+xeqY4CWO4dr4=
+github.com/bsv-blockchain/go-bn v1.1.4 h1:mEOqX7NwBScGbxq5icxbDI0GOQYtjJBz+xC27xwWQFI=
+github.com/bsv-blockchain/go-bn v1.1.4/go.mod h1:qzHqHkPqXc3uDSoFmHsD8uxgkr/POzU8kpIH4Jm/AcM=
+github.com/bsv-blockchain/go-bt/v2 v2.6.1 h1:cqtRlqOPUb0qWCAvhtdBqWZmBhVlPND8yCZ3yPNFYtM=
+github.com/bsv-blockchain/go-bt/v2 v2.6.1/go.mod h1:Roub1gyqaLT2X2QuCO/3A3sPbIqRztOMeVr6gLcijWE=
 github.com/bsv-blockchain/go-sdk v1.2.18 h1:JFl8TNM7lf80CslrXjlungDOyuvL9COzond9BOR81Us=
 github.com/bsv-blockchain/go-sdk v1.2.18/go.mod h1:QWYwia7QSPB8+sLWyVldsIg0wPPzvEmXL5wGAT0dgaA=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
@@ -767,8 +767,8 @@ golang.org/x/sync v0.0.0-20201207232520-09787c993a3a/go.mod h1:RxMgew5VJxzue5/jJ
 golang.org/x/sync v0.0.0-20210220032951-036812b2e83c/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.1.0/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
-golang.org/x/sync v0.19.0 h1:vV+1eWNmZ5geRlYjzm2adRgW2/mcpevXNg50YZtPCE4=
-golang.org/x/sync v0.19.0/go.mod h1:9KTHXmSnoGruLpwFjVSX0lNNA75CykiMECbovNTZqGI=
+golang.org/x/sync v0.20.0 h1:e0PTpb7pjO8GAtTs2dQ6jYa5BWYlMuX047Dco/pItO4=
+golang.org/x/sync v0.20.0/go.mod h1:9xrNwdLfx4jkKbNva9FpL6vEN7evnE43NNNJQ2LF3+0=
 golang.org/x/sys v0.0.0-20180823144017-11551d06cbcc/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20180830151530-49385e6e1522/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20181026203630-95b1ffbd15a5/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
