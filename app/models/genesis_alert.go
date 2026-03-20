@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/bsv-blockchain/go-alert-system/app/models/model"
@@ -14,7 +15,7 @@ func CreateGenesisAlert(ctx context.Context, opts ...model.Options) error {
 	newAlert := NewAlertMessage(opts...)
 	// Get the alert message by sequence number
 	m, err := GetAlertMessageBySequenceNumber(ctx, 0, opts...)
-	if err != nil {
+	if err != nil && !errors.Is(err, ErrAlertNotFound) {
 		return err
 	} else if m != nil && len(m.Hash) > 0 { // found it, skipping (no need to create)
 		return nil
