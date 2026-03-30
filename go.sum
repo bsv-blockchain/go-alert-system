@@ -77,8 +77,8 @@ github.com/bsv-blockchain/go-bn v1.1.4 h1:mEOqX7NwBScGbxq5icxbDI0GOQYtjJBz+xC27x
 github.com/bsv-blockchain/go-bn v1.1.4/go.mod h1:qzHqHkPqXc3uDSoFmHsD8uxgkr/POzU8kpIH4Jm/AcM=
 github.com/bsv-blockchain/go-bt/v2 v2.6.1 h1:cqtRlqOPUb0qWCAvhtdBqWZmBhVlPND8yCZ3yPNFYtM=
 github.com/bsv-blockchain/go-bt/v2 v2.6.1/go.mod h1:Roub1gyqaLT2X2QuCO/3A3sPbIqRztOMeVr6gLcijWE=
-github.com/bsv-blockchain/go-sdk v1.2.19 h1:KInzoyKp/dh21YiMpPDpKmHu5z37yaQXF02OMZWdsXU=
-github.com/bsv-blockchain/go-sdk v1.2.19/go.mod h1:5mmw1QLusuAkjWmQgUOurQYCXdIsQEsWXbAZ9zwme3g=
+github.com/bsv-blockchain/go-sdk v1.2.20 h1:eifeQDIEFCGBpeFUo10sh3eGQVwXo4oE7yRdDwzjpn0=
+github.com/bsv-blockchain/go-sdk v1.2.20/go.mod h1:5mmw1QLusuAkjWmQgUOurQYCXdIsQEsWXbAZ9zwme3g=
 github.com/canonical/go-sp800.90a-drbg v0.0.0-20210314144037-6eeb1040d6c3 h1:oe6fCvaEpkhyW3qAicT0TnGtyht/UrgvOwMcEgLb7Aw=
 github.com/canonical/go-sp800.90a-drbg v0.0.0-20210314144037-6eeb1040d6c3/go.mod h1:qdP0gaj0QtgX2RUZhnlVrceJ+Qln8aSlDyJwelLLFeM=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
