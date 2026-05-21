@@ -110,5 +110,8 @@ func (a *AlertMessageFreezeUtxo) ToJSON(_ context.Context) []byte {
 
 // MessageString executes the alert
 func (a *AlertMessageFreezeUtxo) MessageString() string {
+	if len(a.Funds) == 0 || len(a.Funds[0].EnforceAtHeight) == 0 {
+		return "Freezing utxo: alert message contains no fund data."
+	}
 	return fmt.Sprintf("Freezing utxo id [%x]; vout: [%d], enforcing at height start [%d], end [%d].", a.Funds[0].TxOut.TxId, a.Funds[0].TxOut.Vout, a.Funds[0].EnforceAtHeight[0].Start, a.Funds[0].EnforceAtHeight[0].Stop)
 }
