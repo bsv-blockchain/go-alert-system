@@ -97,5 +97,8 @@ func (a *AlertMessageConfiscateTransaction) ToJSON(_ context.Context) []byte {
 
 // MessageString executes the alert
 func (a *AlertMessageConfiscateTransaction) MessageString() string {
+	if len(a.Transactions) == 0 {
+		return "Confiscation alert: alert message contains no transaction data."
+	}
 	return fmt.Sprintf("Adding confiscation transaction [%x] to whitelist enforcing at height [%d].", a.Transactions[0].ConfiscationTransaction.Hex, a.Transactions[0].ConfiscationTransaction.EnforceAtHeight)
 }
