@@ -85,5 +85,8 @@ func (a *AlertMessageSetKeys) ToJSON(_ context.Context) []byte {
 
 // MessageString executes the alert
 func (a *AlertMessageSetKeys) MessageString() string {
+	if len(a.Keys) < 5 {
+		return "Setting keys: alert message contains an incomplete key set."
+	}
 	return fmt.Sprintf("Setting keys: %x, %x, %x, %x, %x", a.Keys[0], a.Keys[1], a.Keys[2], a.Keys[3], a.Keys[4])
 }
