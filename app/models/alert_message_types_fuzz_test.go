@@ -8,6 +8,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// maxFuzzInputSize bounds the size of fuzzer-generated inputs handed to the
+// alert parsers. The parsers read their payloads with an unpreallocated
+// byte-by-byte loop, so a multi-hundred-KB input (the fuzzer generates inputs
+// up to ~1MB) can make a single execution slow enough to trip Go's internal
+// fuzztime context, surfacing as a "context deadline exceeded" failure near the
+// -fuzztime boundary on slower CI runners. Every parser branch is fully
+// exercised well below this size, so skipping larger inputs costs no coverage.
+const maxFuzzInputSize = 8192
+
 // Helper functions for fuzz tests
 
 // buildVarIntMessage builds a message from multiple parts, each prefixed with its length as a VarInt
@@ -91,6 +100,11 @@ func FuzzAlertMessageBanPeerRead(f *testing.F) {
 	f.Add(largeMsg)
 
 	f.Fuzz(func(t *testing.T, data []byte) {
+		// Guard against oversized inputs that would trip Go's fuzztime context
+		if len(data) > maxFuzzInputSize {
+			t.Skipf("input too large: %d bytes", len(data))
+		}
+
 		alert := &AlertMessageBanPeer{}
 
 		// Should never panic
@@ -118,6 +132,11 @@ func FuzzAlertMessageUnbanPeerRead(f *testing.F) {
 	addCommonEdgeCases(f)
 
 	f.Fuzz(func(t *testing.T, data []byte) {
+		// Guard against oversized inputs that would trip Go's fuzztime context
+		if len(data) > maxFuzzInputSize {
+			t.Skipf("input too large: %d bytes", len(data))
+		}
+
 		alert := &AlertMessageUnbanPeer{}
 
 		// Should never panic
@@ -153,6 +172,11 @@ func FuzzAlertMessageInformationalRead(f *testing.F) {
 	f.Add(extraBytes)
 
 	f.Fuzz(func(t *testing.T, data []byte) {
+		// Guard against oversized inputs that would trip Go's fuzztime context
+		if len(data) > maxFuzzInputSize {
+			t.Skipf("input too large: %d bytes", len(data))
+		}
+
 		alert := &AlertMessageInformational{}
 
 		// Should never panic
@@ -189,6 +213,11 @@ func FuzzAlertMessageFreezeUtxoRead(f *testing.F) {
 	f.Add(overflowMsg)
 
 	f.Fuzz(func(t *testing.T, data []byte) {
+		// Guard against oversized inputs that would trip Go's fuzztime context
+		if len(data) > maxFuzzInputSize {
+			t.Skipf("input too large: %d bytes", len(data))
+		}
+
 		alert := &AlertMessageFreezeUtxo{}
 
 		// Should never panic
@@ -222,6 +251,11 @@ func FuzzAlertMessageUnfreezeUtxoRead(f *testing.F) {
 	f.Add(make([]byte, 114))
 
 	f.Fuzz(func(t *testing.T, data []byte) {
+		// Guard against oversized inputs that would trip Go's fuzztime context
+		if len(data) > maxFuzzInputSize {
+			t.Skipf("input too large: %d bytes", len(data))
+		}
+
 		alert := &AlertMessageUnfreezeUtxo{}
 
 		// Should never panic
@@ -262,6 +296,11 @@ func FuzzAlertMessageConfiscateTransactionRead(f *testing.F) {
 	f.Add(badLenMsg)
 
 	f.Fuzz(func(t *testing.T, data []byte) {
+		// Guard against oversized inputs that would trip Go's fuzztime context
+		if len(data) > maxFuzzInputSize {
+			t.Skipf("input too large: %d bytes", len(data))
+		}
+
 		alert := &AlertMessageConfiscateTransaction{}
 
 		// Should never panic
@@ -297,6 +336,11 @@ func FuzzAlertMessageInvalidateBlockRead(f *testing.F) {
 	f.Add(minMsg)
 
 	f.Fuzz(func(t *testing.T, data []byte) {
+		// Guard against oversized inputs that would trip Go's fuzztime context
+		if len(data) > maxFuzzInputSize {
+			t.Skipf("input too large: %d bytes", len(data))
+		}
+
 		alert := &AlertMessageInvalidateBlock{}
 
 		// Should never panic
@@ -334,6 +378,11 @@ func FuzzAlertMessageSetKeysRead(f *testing.F) {
 	f.Add(make([]byte, 100)) // arbitrary length
 
 	f.Fuzz(func(t *testing.T, data []byte) {
+		// Guard against oversized inputs that would trip Go's fuzztime context
+		if len(data) > maxFuzzInputSize {
+			t.Skipf("input too large: %d bytes", len(data))
+		}
+
 		alert := &AlertMessageSetKeys{}
 
 		// Should never panic
