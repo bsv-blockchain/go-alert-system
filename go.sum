@@ -164,8 +164,8 @@ github.com/libp2p/go-libp2p v0.48.0 h1:h2BrLAgrj7X8bEN05K7qmrjpNHYA+6tnsGRdprjTn
 github.com/libp2p/go-libp2p v0.48.0/go.mod h1:Q1fBZNdmC2Hf82husCTfkKJVfHm2we5zk+NWmOGEmWk=
 github.com/libp2p/go-libp2p-asn-util v0.4.1 h1:xqL7++IKD9TBFMgnLPZR6/6iYhawHKHl950SO9L6n94=
 github.com/libp2p/go-libp2p-asn-util v0.4.1/go.mod h1:d/NI6XZ9qxw67b4e+NgpQexCIiFYJjErASrYW4PFDN8=
-github.com/libp2p/go-libp2p-kad-dht v0.40.0 h1:as8U7Y1RX9CTKCBiFBHWKZ6tSS+rE+6WNz+H1+M+wbo=
-github.com/libp2p/go-libp2p-kad-dht v0.40.0/go.mod h1:iLUjII47u3/HjxyhucI2lhsl29lrzlAs/ym16+H40jE=
+github.com/libp2p/go-libp2p-kad-dht v0.41.0 h1:sDigz5SgV20Crj8ItJmJpEAM+eJrzC/SaiBweg0gDRw=
+github.com/libp2p/go-libp2p-kad-dht v0.41.0/go.mod h1:2qc4QGLvmIdznYbNg++FF76vp4q2SaBZyr76jHV8xgs=
 github.com/libp2p/go-libp2p-kbucket v0.8.0 h1:QAK7RzKJpYe+EuSEATAaaHYMYLkPDGC18m9jxPLnU8s=
 github.com/libp2p/go-libp2p-kbucket v0.8.0/go.mod h1:JMlxqcEyKwO6ox716eyC0hmiduSWZZl6JY93mGaaqc4=
 github.com/libp2p/go-libp2p-pubsub v0.16.0 h1:j7G2C8kJwkcAQqYR7Wmq3d75d3Sgw/N0Hhiv0dVx7OY=
@@ -210,8 +210,8 @@ github.com/montanaflynn/stats v0.9.0/go.mod h1:etXPPgVO6n31NxCd9KQUMvCM+ve0ruNzt
 github.com/mr-tron/base58 v1.1.2/go.mod h1:BinMc/sQntlIE1frQmRFPUoPA1Zkr8VRgBdjWI2mNwc=
 github.com/mr-tron/base58 v1.3.0 h1:K6Y13R2h+dku0wOqKtecgRnBUBPrZzLZy5aIj8lCcJI=
 github.com/mr-tron/base58 v1.3.0/go.mod h1:2BuubE67DCSWwVfx37JWNG8emOC0sHEU4/HpcYgCLX8=
-github.com/mrz1836/go-api-router v1.0.15 h1:OhWq7YO+IWcfdfLA1ZJx/+PBl6DPkPWq5bveJsnTLzE=
-github.com/mrz1836/go-api-router v1.0.15/go.mod h1:LGmZIhCyZNd6RlqRtv+DgW0M//Xsl+iI0Ezcvhx5Z9k=
+github.com/mrz1836/go-api-router v1.0.16 h1:qysfIP04gFj5NgY98TlR1C3WaGvTPLNoSIrdvYeUq90=
+github.com/mrz1836/go-api-router v1.0.16/go.mod h1:refmCkzGbTy1R2KklaDivBdowolJQN/tdAyF7rQChVY=
 github.com/mrz1836/go-datastore v1.3.6 h1:HIC0au/n5Mv2Zg1AfKWcTGqycehhhfaM2NQqToLOhlY=
 github.com/mrz1836/go-datastore v1.3.6/go.mod h1:OGs5zMUOz5cEOl2uHoGLzWHU2FH0R0P3dOormUowhEc=
 github.com/mrz1836/go-logger v1.0.6 h1:5eGbtlMEX/5DDUyESTTqzbOggWTuCNkLGJ/CxJpo0Y4=
