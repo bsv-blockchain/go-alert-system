@@ -29,7 +29,7 @@ func (s *Server) initDHT(ctx context.Context) (*dht.IpfsDHT, error) {
 	options = append(options, dht.QueryFilter(dht.PublicQueryFilter))
 
 	// Sync a DHT, for use in peer discovery. We can't just make a new DHT
-	kademliaDHT, err := dht.New(ctx, s.host, options...)
+	kademliaDHT, err := dht.New(s.host, options...)
 	if err != nil {
 		return nil, err
 	}

@@ -38,5 +38,6 @@ func (a *Action) alerts(w http.ResponseWriter, req *http.Request, _ httprouter.P
 		AlertsResponse{
 			Alerts:         alerts,
 			LatestSequence: alerts[len(alerts)-1].SequenceNumber,
-		}, []string{"alerts", "latest_sequence"})
+		}, []string{"alerts", "latest_sequence"},
+	)
 }

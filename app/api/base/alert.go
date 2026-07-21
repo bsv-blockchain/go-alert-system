@@ -77,5 +77,6 @@ func (a *Action) alert(w http.ResponseWriter, req *http.Request, _ httprouter.Pa
 		w,
 		http.StatusOK,
 		json.NewEncoder(w),
-		p, []string{"sequence", "raw", "text", "alert_type"})
+		p, []string{"sequence", "raw", "text", "alert_type"},
+	)
 }
