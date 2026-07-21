@@ -9,13 +9,13 @@ require (
 	github.com/bitcoinsv/bsvutil v0.0.0-20181216182056-1d77cf353ea9
 	github.com/bsv-blockchain/go-bn v1.1.7
 	github.com/bsv-blockchain/go-bt/v2 v2.6.8
-	github.com/bsv-blockchain/go-sdk v1.3.0
+	github.com/bsv-blockchain/go-sdk v1.3.1
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/libp2p/go-libp2p v0.48.0
-	github.com/libp2p/go-libp2p-kad-dht v0.41.0
+	github.com/libp2p/go-libp2p-kad-dht v0.42.1
 	github.com/libp2p/go-libp2p-pubsub v0.17.0
 	github.com/mrz1836/go-api-router v1.0.16
-	github.com/mrz1836/go-datastore v1.3.6
+	github.com/mrz1836/go-datastore v1.3.7
 	github.com/mrz1836/go-logger v1.0.6
 	github.com/multiformats/go-multiaddr v0.16.1
 	github.com/newrelic/go-agent/v3/integrations/nrhttprouter v1.1.5
@@ -81,7 +81,7 @@ require (
 	github.com/libp2p/go-cidranger v1.1.0 // indirect
 	github.com/libp2p/go-flow-metrics v0.3.0 // indirect
 	github.com/libp2p/go-libp2p-asn-util v0.4.1 // indirect
-	github.com/libp2p/go-libp2p-kbucket v0.8.0 // indirect
+	github.com/libp2p/go-libp2p-kbucket v0.9.0 // indirect
 	github.com/libp2p/go-libp2p-record v0.3.1 // indirect
 	github.com/libp2p/go-libp2p-routing-helpers v0.7.5 // indirect
 	github.com/libp2p/go-msgio v0.3.0 // indirect
@@ -95,7 +95,7 @@ require (
 	github.com/mikioh/tcpinfo v0.0.0-20190314235526-30a79bb1804b // indirect
 	github.com/mikioh/tcpopt v0.0.0-20190314235656-172688c1accc // indirect
 	github.com/minio/sha256-simd v1.0.1 // indirect
-	github.com/montanaflynn/stats v0.9.0 // indirect
+	github.com/montanaflynn/stats v0.12.2 // indirect
 	github.com/mr-tron/base58 v1.3.0 // indirect
 	github.com/mrz1836/go-parameters v1.0.8 // indirect
 	github.com/multiformats/go-base32 v0.1.0 // indirect
@@ -175,8 +175,8 @@ require (
 	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/tools v0.48.0 // indirect
 	gonum.org/v1/gonum v0.17.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260706201446-f0a921348800 // indirect
-	google.golang.org/grpc v1.82.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260715232425-e75dac1f907d // indirect
+	google.golang.org/grpc v1.82.1 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/mysql v1.6.0 // indirect
