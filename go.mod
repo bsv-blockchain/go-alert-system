@@ -9,10 +9,10 @@ require (
 	github.com/bitcoinsv/bsvutil v0.0.0-20181216182056-1d77cf353ea9
 	github.com/bsv-blockchain/go-bn v1.1.7
 	github.com/bsv-blockchain/go-bt/v2 v2.6.9
-	github.com/bsv-blockchain/go-sdk v1.3.3
+	github.com/bsv-blockchain/go-sdk v1.3.4
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/libp2p/go-libp2p v0.49.0
-	github.com/libp2p/go-libp2p-kad-dht v0.42.1
+	github.com/libp2p/go-libp2p-kad-dht v0.42.2
 	github.com/libp2p/go-libp2p-pubsub v0.17.0
 	github.com/mrz1836/go-api-router v1.0.16
 	github.com/mrz1836/go-datastore v1.3.7
@@ -21,7 +21,7 @@ require (
 	github.com/newrelic/go-agent/v3/integrations/nrhttprouter v1.1.5
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/viper v1.21.0
-	github.com/stretchr/testify v1.12.0
+	github.com/stretchr/testify v1.12.1
 	go.mongodb.org/mongo-driver v1.17.9
 	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.31.2
@@ -176,7 +176,6 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260727163830-6c54dddc4772 // indirect
 	google.golang.org/grpc v1.82.1 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/mysql v1.6.0 // indirect
 	gorm.io/driver/postgres v1.6.0 // indirect
 	gorm.io/plugin/dbresolver v1.6.2 // indirect
