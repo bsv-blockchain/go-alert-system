@@ -16,6 +16,8 @@ var (
 	ErrNoRPCUser                    = errors.New("no rpc_user defined")
 	ErrNoRPCConnections             = errors.New("no rpc connections configured")
 	ErrNoGenesisKeys                = errors.New("no genesis keys configured")
+	ErrInvalidGenesisKey            = errors.New("genesis key is not a valid compressed public key")
+	ErrDuplicateGenesisKey          = errors.New("genesis key is listed more than once")
 	ErrRPCUserMissingFromConfig     = errors.New("rpcuser missing from bitcoin.conf file")
 	ErrRPCPasswordMissingFromConfig = errors.New("rpcpassword missing from bitcoin.conf file")
 	ErrUnexpectedPeerAddress        = errors.New("unexpected peer address")

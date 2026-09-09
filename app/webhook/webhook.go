@@ -36,6 +36,9 @@ func PostAlert(ctx context.Context, httpClient config.HTTPInterface, url string,
 	}
 
 	am := alert.ProcessAlertMessage()
+	if am == nil {
+		return fmt.Errorf("%w: %d", models.ErrUnknownAlertType, alert.GetAlertType())
+	}
 	err = am.Read(alert.GetRawMessage())
 	if err != nil {
 		return err

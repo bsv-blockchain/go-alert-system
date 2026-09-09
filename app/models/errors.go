@@ -9,6 +9,7 @@ var (
 	ErrFailedToConvertPubKey     = errors.New("failed to convert pub key to address")
 	ErrAlertTooShort             = errors.New("alert needs to be at least 16 bytes")
 	ErrAlertMessageInvalidLength = errors.New("alert message is invalid - too short length")
+	ErrUnknownAlertType          = errors.New("alert has an unknown alert type")
 
 	// AlertMessageBanPeer errors
 	ErrFailedToReadPeer   = errors.New("failed to read peer")
@@ -45,6 +46,7 @@ var (
 	ErrSetKeysAlertInvalidLength = errors.New("alert is not 165 bytes long")
 	ErrFailedToReadPubKey        = errors.New("failed to read pubKey")
 	ErrInvalidPubKeyFormat       = errors.New("invalid public key format")
+	ErrDuplicatePubKey           = errors.New("duplicate public key in set keys alert")
 	ErrSetKeysRPCError           = errors.New("set keys alert RPC response returned an error")
 
 	// AlertMessageUnbanPeer errors

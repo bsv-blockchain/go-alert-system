@@ -54,7 +54,7 @@ func FuzzNewAlertFromBytes(f *testing.F) {
 		f.Add(typeAlert)
 	}
 
-	// Seed with special alert type 99 (uses 128 byte signature)
+	// Seed with an unknown alert type and a truncated signature block (must fail to parse, never panic)
 	specialAlert := make([]byte, 0)
 	specialAlert = binary.LittleEndian.AppendUint32(specialAlert, 1)
 	specialAlert = binary.LittleEndian.AppendUint32(specialAlert, 1)

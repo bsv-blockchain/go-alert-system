@@ -214,6 +214,23 @@ func (s *StreamThread) ProcessGotSequenceNumber(msg *SyncMessage) error {
 		return err
 	}
 
+	// Only accept the alert that directly follows what is stored, otherwise a peer
+	// could replay an old (validly signed) alert such as a superseded set keys alert.
+	// The stored latest is authoritative: a thread created by the inbound stream
+	// handler never learns the local sequence (it starts at zero), and pubsub may
+	// have delivered alerts while this sync was in flight.
+	var latest *models.AlertMessage
+	if latest, err = models.GetLatestAlert(s.ctx, nil, model.WithAllDependencies(s.config)); err != nil {
+		return err
+	}
+	s.myLatestSequence = latest.SequenceNumber
+	if a.SequenceNumber != s.myLatestSequence+1 {
+		return fmt.Errorf(
+			"%w: expected %d, got %d from peer %s",
+			ErrUnexpectedSequenceNumber, s.myLatestSequence+1, a.SequenceNumber, s.peer.String(),
+		)
+	}
+
 	// Verify signatures
 	var valid bool
 	if valid, err = a.AreSignaturesValid(s.ctx); err != nil {
@@ -226,15 +243,12 @@ func (s *StreamThread) ProcessGotSequenceNumber(msg *SyncMessage) error {
 	// Serialize the alert data and hash
 	a.SerializeData()
 
-	// Process the alert (if it's a set keys alert)
-	// TODO: For now lets just process all alerts... why not?
-	// if a.GetAlertType() == models.AlertTypeSetKeys || a.GetAlertType() == models.AlertTypeInvalidateBlock {
-	ak := a.ProcessAlertMessage()
-	if err = ak.Read(a.GetRawMessage()); err != nil {
-		return err
-	}
+	// Execute the alert. An alert with valid signatures is authentic even when this
+	// build cannot handle it (unknown type, or a payload rejected by a stricter parser),
+	// so it is stored unprocessed for the retry cron and the chain advances rather than
+	// stalling every node on this build at this sequence.
 	a.Processed = true
-	if err = ak.Do(s.ctx); err != nil {
+	if err = a.Execute(s.ctx); err != nil {
 		s.config.Services.Log.Errorf("failed to process alert %d; err: %v", a.SequenceNumber, err.Error())
 		a.Processed = false
 	}

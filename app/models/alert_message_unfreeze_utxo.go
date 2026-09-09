@@ -76,6 +76,9 @@ func (a *AlertMessageUnfreezeUtxo) Do(ctx context.Context) error {
 // ToJSON is the alert in JSON format
 func (a *AlertMessageUnfreezeUtxo) ToJSON(_ context.Context) []byte {
 	m := a.ProcessAlertMessage()
+	if m == nil {
+		return []byte{}
+	}
 	// TODO: Come back and add a message interface for each alert
 	_ = m.Read(a.GetRawMessage())
 	data, err := json.MarshalIndent(m, "", "    ")

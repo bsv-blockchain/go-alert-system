@@ -14,6 +14,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/bitcoinschema/go-bitcoin"
+	"github.com/bitcoinsv/bsvd/bsvec"
 	"github.com/mrz1836/go-datastore"
 	"github.com/spf13/viper"
 )
@@ -51,6 +53,9 @@ func LoadDependencies(ctx context.Context, models []interface{}, isTesting bool)
 	if len(_appConfig.GenesisKeys) == 0 {
 		return nil, ErrNoGenesisKeys
 	}
+	if err = validateGenesisKeys(_appConfig.GenesisKeys); err != nil {
+		return nil, err
+	}
 
 	// Ensure the P2P configuration is valid
 	if err = requireP2P(_appConfig); err != nil {
@@ -86,6 +91,27 @@ func LoadDependencies(ctx context.Context, models []interface{}, isTesting bool)
 	}
 
 	return _appConfig, nil
+}
+
+// validateGenesisKeys ensures every genesis key is a valid, distinct compressed public key.
+// These keys are stored verbatim as the initial active key set, and one key that fails to
+// parse makes signature validation fail for every alert, so reject bad config at startup.
+func validateGenesisKeys(keys []string) error {
+	seen := make(map[string]struct{}, len(keys))
+	for i, key := range keys {
+		normalized := strings.ToLower(key)
+		if len(normalized) != 2*bsvec.PubKeyBytesLenCompressed {
+			return fmt.Errorf("%w: index %d: expected %d hex characters", ErrInvalidGenesisKey, i, 2*bsvec.PubKeyBytesLenCompressed)
+		}
+		if _, err := bitcoin.PubKeyFromString(normalized); err != nil {
+			return fmt.Errorf("%w: index %d: %s", ErrInvalidGenesisKey, i, err.Error())
+		}
+		if _, exists := seen[normalized]; exists {
+			return fmt.Errorf("%w: index %d", ErrDuplicateGenesisKey, i)
+		}
+		seen[normalized] = struct{}{}
+	}
+	return nil
 }
 
 // requireP2P will ensure the P2P configuration is valid

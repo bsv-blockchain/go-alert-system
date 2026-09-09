@@ -2,10 +2,14 @@ package models
 
 import (
 	"encoding/binary"
+	"encoding/hex"
 	"testing"
 
+	"github.com/bitcoinschema/go-bitcoin"
 	"github.com/bsv-blockchain/go-sdk/util"
 	"github.com/stretchr/testify/require"
+
+	"github.com/bsv-blockchain/go-alert-system/utils"
 )
 
 // maxFuzzInputSize bounds the size of fuzzer-generated inputs handed to the
@@ -357,14 +361,18 @@ func FuzzAlertMessageInvalidateBlockRead(f *testing.F) {
 
 // FuzzAlertMessageSetKeysRead tests set keys alert parsing
 func FuzzAlertMessageSetKeysRead(f *testing.F) {
-	// Seed with valid set keys message: exactly 165 bytes (5 keys × 33 bytes)
-	validMsg := make([]byte, 165)
-	// Fill with sample public keys (33 bytes each)
-	for i := 0; i < 5; i++ {
-		validMsg[i*33] = 0x02 // compressed public key prefix
-		for j := 1; j < 33; j++ {
-			validMsg[i*33+j] = byte(i + j)
+	// Seed with a valid set keys message: the five test genesis public keys (5 keys × 33 bytes)
+	validMsg := make([]byte, 0, 165)
+	for _, priv := range []string{utils.Key1, utils.Key2, utils.Key3, utils.Key4, utils.Key5} {
+		pub, err := bitcoin.PubKeyFromPrivateKeyString(priv, true)
+		if err != nil {
+			f.Fatal(err)
 		}
+		var b []byte
+		if b, err = hex.DecodeString(pub); err != nil {
+			f.Fatal(err)
+		}
+		validMsg = append(validMsg, b...)
 	}
 
 	f.Add(validMsg)

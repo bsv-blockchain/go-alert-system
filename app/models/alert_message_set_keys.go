@@ -1,7 +1,6 @@
 package models
 
 import (
-	"bytes"
 	"context"
 	"encoding/hex"
 	"encoding/json"
@@ -9,9 +8,19 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/bitcoinschema/go-bitcoin"
+	"github.com/bitcoinsv/bsvd/bsvec"
 	"github.com/mrz1836/go-datastore"
 
 	"github.com/bsv-blockchain/go-alert-system/app/models/model"
+)
+
+const (
+	// setKeysCount is the number of public keys carried by a set keys alert
+	setKeysCount = 5
+
+	// setKeysPayloadLength is the byte length of a set keys payload
+	setKeysPayloadLength = setKeysCount * bsvec.PubKeyBytesLenCompressed
 )
 
 // AlertMessageSetKeys is the message for setting keys
@@ -25,22 +34,30 @@ type AlertMessageSetKeys struct {
 // Read reads the message
 func (a *AlertMessageSetKeys) Read(alert []byte) error {
 	// Check the length
-	if len(alert) != 165 {
+	if len(alert) != setKeysPayloadLength {
 		return fmt.Errorf("%w, got %d bytes, not valid", ErrSetKeysAlertInvalidLength, len(alert))
 	}
-	buf := bytes.NewReader(alert[:])
 
-	// Read the message hash
-	for key := 0; key < 5; key++ {
-		var pubKey []byte
-		for i := uint64(0); i < 33; i++ {
-			b, err := buf.ReadByte()
-			if err != nil {
-				return fmt.Errorf("%w: %s", ErrFailedToReadPubKey, err.Error())
-			}
-			pubKey = append(pubKey, b)
+	// Read the five compressed public keys
+	seen := make(map[string]struct{}, setKeysCount)
+	for key := 0; key < setKeysCount; key++ {
+		start := key * bsvec.PubKeyBytesLenCompressed
+		pubKey := alert[start : start+bsvec.PubKeyBytesLenCompressed]
+
+		// Every key must be a valid public key, otherwise signature validation
+		// would fail for every future alert once the key set is activated
+		pubKeyHex := hex.EncodeToString(pubKey)
+		if _, err := bitcoin.PubKeyFromString(pubKeyHex); err != nil {
+			return fmt.Errorf("%w: key %d: %s", ErrInvalidPubKeyFormat, key, err.Error())
 		}
-		a.Keys = append(a.Keys, [33]byte(pubKey))
+
+		// Every key must be distinct, otherwise the effective signing threshold drops
+		if _, exists := seen[pubKeyHex]; exists {
+			return fmt.Errorf("%w: key %d", ErrDuplicatePubKey, key)
+		}
+		seen[pubKeyHex] = struct{}{}
+
+		a.Keys = append(a.Keys, [bsvec.PubKeyBytesLenCompressed]byte(pubKey))
 	}
 
 	return nil
@@ -74,6 +91,9 @@ func (a *AlertMessageSetKeys) Do(ctx context.Context) error {
 // ToJSON is the alert in JSON format
 func (a *AlertMessageSetKeys) ToJSON(_ context.Context) []byte {
 	m := a.ProcessAlertMessage()
+	if m == nil {
+		return []byte{}
+	}
 	// TODO: Come back and add a message interface for each alert
 	_ = m.Read(a.GetRawMessage())
 	data, err := json.MarshalIndent(m, "", "    ")

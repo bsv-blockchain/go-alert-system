@@ -24,7 +24,6 @@ import (
 	drouting "github.com/libp2p/go-libp2p/p2p/discovery/routing"
 	dutil "github.com/libp2p/go-libp2p/p2p/discovery/util"
 	"github.com/libp2p/go-libp2p/p2p/net/conngater"
-	"github.com/mrz1836/go-datastore"
 	maddr "github.com/multiformats/go-multiaddr"
 
 	"github.com/bsv-blockchain/go-alert-system/app/config"
@@ -476,11 +475,10 @@ func (s *Server) Topics() map[string]*pubsub.Topic {
 	return s.topics
 }
 
-// Subscribe will subscribe to the alert system
+// Subscribe will subscribe to the topic and handle every alert delivered by other peers
 func (s *Server) Subscribe(ctx context.Context, subscriber *pubsub.Subscription, hostID peer.ID) {
 	s.config.Services.Log.Infof("subscribed to %s topic", subscriber.Topic())
 	for {
-
 		msg, err := subscriber.Next(ctx)
 		if err != nil {
 			if ctx.Err() != nil {
@@ -495,86 +493,79 @@ func (s *Server) Subscribe(ctx context.Context, subscriber *pubsub.Subscription,
 			continue
 		}
 
-		// Read the alert key header
-		var ak *models.AlertMessage
-		if ak, err = models.NewAlertFromBytes(msg.Data, model.WithAllDependencies(s.config)); err != nil {
-			s.config.Services.Log.Errorf("error reading alert key: %s", err.Error())
-			continue
-		}
-
-		// Set the hash
-		ak.SerializeData()
-
-		// Ensure signatures are valid
-		var valid bool
-		if valid, err = ak.AreSignaturesValid(ctx); err != nil {
-			s.config.Services.Log.Infof("error verifying signatures: %s", err.Error())
-			continue
-		}
-
-		// Ensure the signature is valid
-		if !valid {
-			// TODO save these messages still and ban the peer?
-			s.config.Services.Log.Info("signature block is invalid")
-			continue
-		}
-
-		// Ensure the sequence number is correct
-		if _, err = models.GetAlertMessageBySequenceNumber(
-			ctx, ak.SequenceNumber-1, model.WithAllDependencies(s.config),
-		); err != nil {
-			// TODO save these messages still and ban the peer? and possibly resync
-			s.config.Services.Log.Errorf("failed to find prior sequenced alert (num %d): %s", ak.SequenceNumber-1, err.Error())
-			continue
-		}
-
-		// Check if the alert already exists
-		var dup *models.AlertMessage
-		if dup, err = models.GetAlertMessageBySequenceNumber(
-			ctx, ak.SequenceNumber, model.WithAllDependencies(s.config),
-		); err == nil && dup != nil && len(dup.Hash) > 0 {
-			// TODO save these messages still?
-			s.config.Services.Log.Errorf("alert %s already has sequence number %d", dup.Hash, ak.SequenceNumber)
-			continue
-		}
-
-		// Did we get a real error?
-		if err != nil && !errors.Is(err, datastore.ErrNoResults) {
-			s.config.Services.Log.Errorf("error looking for duplicate alert: %s", err.Error())
-			continue
-		}
-
-		// Process the alert message into the correct interface
-		am := ak.ProcessAlertMessage()
-		if err = am.Read(ak.GetRawMessage()); err != nil {
-			s.config.Services.Log.Errorf("failed to read message: %s", err.Error())
-			continue
-		}
-		ak.Processed = true
-
-		// Perform alert action
-		if err = am.Do(ctx); err != nil {
-			s.config.Services.Log.Errorf("failed to do alert action: %s", err.Error())
-			ak.Processed = false
-		}
-
-		// Save the alert message
-		if err = ak.Save(ctx); err != nil {
-			s.config.Services.Log.Errorf("failed to save alert message: %s", err.Error())
-		}
-
-		s.config.Services.Log.Infof("[%s] got alert type: %d, from: %s", subscriber.Topic(), ak.GetAlertType(), msg.ReceivedFrom.String())
-
-		// Send the webhook
-		if len(s.config.AlertWebhookURL) > 0 {
-			if err = webhook.PostAlert(ctx, s.config.Services.HTTPClient, s.config.AlertWebhookURL, ak); err != nil {
-				s.config.Services.Log.Errorf("error processing webhook request: %s", err.Error())
-			}
+		if err = s.handleAlert(ctx, subscriber.Topic(), msg.Data, msg.ReceivedFrom); err != nil {
+			// TODO save rejected messages and ban the peer?
+			s.config.Services.Log.Errorf(
+				"[%s] rejected alert from %s: %s", subscriber.Topic(), msg.ReceivedFrom.String(), err.Error(),
+			)
 		}
 	}
 }
 
-// processAlerts performs the alert processing
+// handleAlert validates an alert received over pubsub, then stores and executes it.
+// It returns an error when the alert is rejected and nil once the alert has been stored.
+func (s *Server) handleAlert(ctx context.Context, topic string, data []byte, from peer.ID) error {
+	// Read the alert
+	ak, err := models.NewAlertFromBytes(data, model.WithAllDependencies(s.config))
+	if err != nil {
+		return err
+	}
+
+	// Set the hash
+	ak.SerializeData()
+
+	// Ensure signatures are valid
+	var valid bool
+	if valid, err = ak.AreSignaturesValid(ctx); err != nil {
+		return err
+	} else if !valid {
+		return ErrInvalidAlerts
+	}
+
+	// Ensure the prior sequence is stored (sequence 0 underflows, so genesis can never be replaced)
+	if _, err = models.GetAlertMessageBySequenceNumber(
+		ctx, ak.SequenceNumber-1, model.WithAllDependencies(s.config),
+	); err != nil {
+		return fmt.Errorf("%w: sequence %d: %s", ErrPriorAlertMissing, ak.SequenceNumber-1, err.Error())
+	}
+
+	// Ensure this sequence is not stored yet
+	var dup *models.AlertMessage
+	if dup, err = models.GetAlertMessageBySequenceNumber(
+		ctx, ak.SequenceNumber, model.WithAllDependencies(s.config),
+	); err == nil && dup != nil && len(dup.Hash) > 0 {
+		return fmt.Errorf("%w: sequence %d is alert %s", ErrDuplicateAlert, ak.SequenceNumber, dup.Hash)
+	} else if err != nil && !errors.Is(err, models.ErrAlertNotFound) {
+		return err
+	}
+
+	// Execute the alert. An alert with valid signatures is authentic even when this
+	// build cannot handle it, so it is stored unprocessed for the retry cron and the
+	// chain advances rather than stalling at this sequence.
+	ak.Processed = true
+	if err = ak.Execute(ctx); err != nil {
+		s.config.Services.Log.Errorf("failed to process alert %d; err: %v", ak.SequenceNumber, err.Error())
+		ak.Processed = false
+	}
+
+	// Save the alert message
+	if err = ak.Save(ctx); err != nil {
+		return err
+	}
+
+	s.config.Services.Log.Infof("[%s] got alert type: %d, from: %s", topic, ak.GetAlertType(), from.String())
+
+	// Send the webhook
+	if len(s.config.AlertWebhookURL) > 0 {
+		if err = webhook.PostAlert(ctx, s.config.Services.HTTPClient, s.config.AlertWebhookURL, ak); err != nil {
+			s.config.Services.Log.Errorf("error processing webhook request: %s", err.Error())
+		}
+	}
+	return nil
+}
+
+// processAlerts retries every stored alert that has not been processed yet.
+// One alert that still cannot be processed must not stop the others from being retried.
 func (s *Server) processAlerts(ctx context.Context) error {
 	alerts, err := models.GetAllUnprocessedAlerts(ctx, nil, model.WithAllDependencies(s.config))
 	if err != nil {
@@ -584,33 +575,26 @@ func (s *Server) processAlerts(ctx context.Context) error {
 	success := 0
 	for _, alert := range alerts {
 		alert.SetOptions(model.WithAllDependencies(s.config))
-		// Serialize the alert data and hash
-		err := alert.ReadRaw()
-		if err != nil {
+
+		// Parse the stored raw alert and recompute the hash
+		if err = alert.ReadRaw(); err != nil {
+			s.config.Services.Log.Errorf("failed to read stored alert %d; err: %v", alert.SequenceNumber, err.Error())
 			continue
 		}
 		alert.SerializeData()
+
 		// Process the alert
-		ak := alert.ProcessAlertMessage()
-		if ak == nil {
+		s.config.Services.Log.Debugf("attempting to process alert %d of type %d", alert.SequenceNumber, alert.GetAlertType())
+		if err = alert.Execute(ctx); err != nil {
+			s.config.Services.Log.Errorf("failed to process alert %d; err: %v", alert.SequenceNumber, err.Error())
 			continue
 		}
-		if err = ak.Read(alert.GetRawMessage()); err != nil {
-			return err
-		}
-		s.config.Services.Log.Debugf("attempting to process alert %d of type %d", alert.SequenceNumber, alert.GetAlertType())
-		alert.Processed = true
-		if err = ak.Do(ctx); err != nil {
-			s.config.Services.Log.Errorf("failed to process alert %d; err: %v", alert.SequenceNumber, err.Error())
-			alert.Processed = false
-		}
 
-		if alert.Processed {
-			success++
-			// Save the alert
-			if err = alert.Save(ctx); err != nil {
-				return err
-			}
+		// Save the alert
+		alert.Processed = true
+		success++
+		if err = alert.Save(ctx); err != nil {
+			return err
 		}
 	}
 	s.config.Services.Log.Infof("Processed %d failed alerts", success)
