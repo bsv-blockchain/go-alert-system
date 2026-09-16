@@ -9,6 +9,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// maxFuzzInputSize bounds the size of fuzzer-generated inputs processed by the
+// fuzz targets below. The Go fuzzing engine can synthesize inputs up to ~1MB;
+// running the scanner/parsing logic over inputs that large makes each execution
+// (and each minimization step) expensive enough that Go's internal -fuzztime
+// context deadline can expire mid-run, surfacing as a spurious
+// "context deadline exceeded" failure rather than a real bug. A bitcoin.conf is
+// never anywhere near this size, so skipping oversized inputs keeps the tests
+// focused and deterministic without sacrificing meaningful coverage.
+const maxFuzzInputSize = 10000
+
 // FuzzSplitFunc tests the bitcoin.conf line splitting function
 func FuzzSplitFunc(f *testing.F) {
 	// Seed with valid config lines
@@ -33,6 +43,10 @@ func FuzzSplitFunc(f *testing.F) {
 	f.Add([]byte("key==value\n"), false) // double delimiter
 
 	f.Fuzz(func(t *testing.T, data []byte, atEOF bool) {
+		if len(data) > maxFuzzInputSize {
+			t.Skipf("input too large: %d bytes", len(data))
+		}
+
 		// Should never panic
 		advance, token, err := splitFunc(data, atEOF)
 
@@ -100,6 +114,10 @@ rpcport=8332
 	f.Add([]byte("key=value\r"))
 
 	f.Fuzz(func(t *testing.T, data []byte) {
+		if len(data) > maxFuzzInputSize {
+			t.Skipf("input too large: %d bytes", len(data))
+		}
+
 		// Create a scanner with the custom split function
 		scanner := bufio.NewScanner(bytes.NewReader(data))
 		scanner.Split(splitFunc)
@@ -162,6 +180,10 @@ func FuzzConfigKeyValueParsing(f *testing.F) {
 	f.Add("user@domain=pass!#$")
 
 	f.Fuzz(func(t *testing.T, kv string) {
+		if len(kv) > maxFuzzInputSize {
+			t.Skipf("input too large: %d bytes", len(kv))
+		}
+
 		// Parse key=value pair
 		keyValue := strings.Split(kv, "=")
 
@@ -218,6 +240,10 @@ func FuzzHostPortParsing(f *testing.F) {
 	f.Add("http://localhost:8332:extra")
 
 	f.Fuzz(func(t *testing.T, hostPort string) {
+		if len(hostPort) > maxFuzzInputSize {
+			t.Skipf("input too large: %d bytes", len(hostPort))
+		}
+
 		// Simulate the trimming logic from loadBitcoinConfiguration
 		trimmed := strings.TrimPrefix(hostPort, "http://")
 		trimmed = strings.TrimPrefix(trimmed, "https://")

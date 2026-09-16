@@ -9,12 +9,12 @@ require (
 	github.com/bitcoinsv/bsvutil v0.0.0-20181216182056-1d77cf353ea9
 	github.com/bsv-blockchain/go-bn v1.2.0
 	github.com/bsv-blockchain/go-bt/v2 v2.7.1
-	github.com/bsv-blockchain/go-sdk v1.4.1
+	github.com/bsv-blockchain/go-sdk v1.5.1
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/libp2p/go-libp2p v0.49.0
 	github.com/libp2p/go-libp2p-kad-dht v0.42.2
 	github.com/libp2p/go-libp2p-pubsub v0.17.0
-	github.com/mrz1836/go-api-router v1.0.16
+	github.com/mrz1836/go-api-router v1.1.0
 	github.com/mrz1836/go-datastore v1.4.0
 	github.com/mrz1836/go-logger v1.0.6
 	github.com/multiformats/go-multiaddr v0.16.1
@@ -22,7 +22,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.12.1
-	go.mongodb.org/mongo-driver v1.17.9
+	go.mongodb.org/mongo-driver v1.17.10
 	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.31.2
 )
