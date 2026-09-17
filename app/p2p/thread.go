@@ -187,6 +187,12 @@ func (s *StreamThread) ProcessSyncMessage(ctx context.Context) error {
 	case err := <-done:
 		return err
 	case <-time.After(s.syncTimeout()):
+		// Close the stream so the timeout itself terminates the exchange: it unblocks the
+		// reader goroutine's pending read (which then exits via the buffered done channel)
+		// rather than relying on the caller to close afterward. ProcessSyncMessage is
+		// exported, so a direct caller must not be left with a leaked goroutine or an open
+		// stream. Close is idempotent, so the caller closing again is harmless.
+		_ = s.stream.Close()
 		return fmt.Errorf("%w: peer %s", ErrSyncTimeout, s.peer.String())
 	}
 }

@@ -43,8 +43,13 @@ func (s *scriptedStream) Conn() network.Conn { return s.conn }
 // ID returns a stable fake stream identifier used only for logging
 func (s *scriptedStream) ID() string { return "scripted-stream" }
 
-// Close records that the thread closed the stream
+// Close records that the thread closed the stream. Like a real libp2p stream, closing it
+// unblocks a pending read: if the scripted reader is an io.Closer (e.g. an io.Pipe), it is
+// closed too so a goroutine blocked reading the body returns instead of hanging.
 func (s *scriptedStream) Close() error {
+	if c, ok := s.reader.(io.Closer); ok {
+		_ = c.Close()
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.closed = true
@@ -235,6 +240,7 @@ func TestStreamThread_ProcessSyncMessage(t *testing.T) {
 		err := thread.ProcessSyncMessage(context.Background())
 		require.ErrorIs(t, err, ErrSyncTimeout)
 		require.Less(t, time.Since(start), 5*time.Second, "must return promptly on the configured timeout")
+		require.True(t, stream.isClosed(), "the timeout must close the stream and terminate the exchange")
 	})
 
 	t.Run("a panic in the reader goroutine is recovered and does not kill the process", func(t *testing.T) {
