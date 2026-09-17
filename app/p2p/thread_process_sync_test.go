@@ -159,6 +159,14 @@ func TestReadSyncFrame(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, []byte("hello"), b)
 	})
+
+	t.Run("a cap larger than the platform int is clamped so make cannot panic", func(t *testing.T) {
+		// Without clamping, maxSize == MaxUint64 would let this length past the check and
+		// make([]byte, vi) would panic (len out of range). The clamp forces a clean reject.
+		b, err := readSyncFrame(bytes.NewReader(varint(math.MaxUint64)), math.MaxUint64)
+		require.ErrorIs(t, err, ErrSyncMessageTooLarge)
+		require.Nil(t, b)
+	})
 }
 
 // TestStreamThread_ProcessSyncMessage covers the hardened stream loop end to end: an

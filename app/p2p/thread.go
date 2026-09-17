@@ -385,6 +385,12 @@ func readSyncFrame(r io.Reader, maxSize uint64) ([]byte, error) {
 	if maxSize == 0 {
 		maxSize = config.DefaultP2PMaxMessageSizeBytes
 	}
+	// Clamp the effective limit to the platform's maximum int so a length that passes the
+	// size check below can never overflow make and panic (len out of range), even on a
+	// 32-bit platform or when a caller supplies a limit larger than an int can hold.
+	if maxInt := uint64(^uint(0) >> 1); maxSize > maxInt {
+		maxSize = maxInt
+	}
 	var vi util.VarInt
 	if _, err := vi.ReadFrom(r); err != nil {
 		return nil, err
