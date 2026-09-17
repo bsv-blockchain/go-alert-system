@@ -1,11 +1,36 @@
 package p2p
 
 import (
+	"bytes"
 	"encoding/binary"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
+
+// FuzzReadSyncFrame ensures the length-prefixed frame reader never panics and never
+// allocates beyond the cap for arbitrary attacker-controlled bytes. The cap is fixed
+// (never fuzzer-driven) so the fuzz run itself cannot be steered into a huge allocation.
+func FuzzReadSyncFrame(f *testing.F) {
+	const maxSize = 4096
+
+	f.Add([]byte{})
+	f.Add([]byte{0x00})
+	f.Add([]byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff}) // uint64 max length prefix
+	f.Add([]byte{0xfe, 0xff, 0xff, 0xff, 0xff})                         // uint32 max length prefix
+	f.Add([]byte{0xfd, 0xff, 0xff})                                     // uint16 max length prefix
+	f.Add([]byte{0x01, 'a'})                                            // one-byte body
+	f.Add(append([]byte{0x05}, []byte("hello")...))                     // valid small frame
+
+	f.Fuzz(func(t *testing.T, data []byte) {
+		b, err := readSyncFrame(bytes.NewReader(data), maxSize)
+		if err != nil {
+			require.Nil(t, b, "no buffer may be returned on error")
+			return
+		}
+		require.LessOrEqual(t, len(b), maxSize, "allocation must never exceed the cap")
+	})
+}
 
 // FuzzNewSyncMessageFromBytes tests P2P sync message parsing
 func FuzzNewSyncMessageFromBytes(f *testing.F) {
