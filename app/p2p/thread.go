@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"runtime/debug"
 	"time"
 
 	"github.com/bsv-blockchain/go-sdk/util"
@@ -84,8 +85,15 @@ func (s *StreamThread) ProcessSyncMessage(ctx context.Context) error {
 		// unexpected panic) cannot terminate the whole host process.
 		defer func() {
 			if r := recover(); r != nil {
-				s.config.Services.Log.Errorf("recovered from panic processing sync message from peer %s: %v", s.peer.String(), r)
-				_ = s.stream.Close()
+				// Everything here must tolerate a half-built thread: a panic raised inside a
+				// deferred function while already panicking is unrecoverable and kills the
+				// process, which is the exact failure this recover exists to prevent.
+				if s.config != nil && s.config.Services.Log != nil {
+					s.config.Services.Log.Errorf("recovered from panic processing sync message from peer %s: %v\n%s", s.peer.String(), r, debug.Stack())
+				}
+				if s.stream != nil {
+					_ = s.stream.Close()
+				}
 				// Non-blocking: the outer select may have already returned.
 				select {
 				case done <- fmt.Errorf("%w: peer %s", ErrSyncPanic, s.peer.String()):
@@ -99,14 +107,17 @@ func (s *StreamThread) ProcessSyncMessage(ctx context.Context) error {
 			// make and crash the process.
 			b, err := readSyncFrame(s.stream, s.maxSyncMessageBytes())
 			if err != nil {
-				if s.stream.Conn().IsClosed() {
-					done <- nil
-					return
-				}
+				// Checked before the connection state: a peer that sends an oversized frame
+				// and immediately drops the connection must still surface the rejection,
+				// otherwise the abuse is reported to the caller as a successful sync.
 				if errors.Is(err, ErrSyncMessageTooLarge) {
 					s.config.Services.Log.Debugf("rejecting sync frame from peer %s: %s; closing stream", s.peer.String(), err.Error())
 					_ = s.stream.Close()
 					done <- err
+					return
+				}
+				if s.stream.Conn().IsClosed() {
+					done <- nil
 					return
 				}
 				s.config.Services.Log.Debugf("failed to read sync message: %s; closing stream", err.Error())
@@ -122,6 +133,7 @@ func (s *StreamThread) ProcessSyncMessage(ctx context.Context) error {
 			var msg *SyncMessage
 			if msg, err = NewSyncMessageFromBytes(b); err != nil {
 				s.config.Services.Log.Errorf("failed to convert to sync message: %s", err.Error())
+				_ = s.stream.Close()
 				done <- err
 				return
 			}
@@ -175,7 +187,7 @@ func (s *StreamThread) ProcessSyncMessage(ctx context.Context) error {
 				// than loop until the timeout holding a goroutine and stream open.
 				s.config.Services.Log.Debugf("received unknown sync message type %d from peer %s; closing stream", msg.Type, s.peer.String())
 				_ = s.stream.Close()
-				done <- nil
+				done <- fmt.Errorf("%w: type %d from peer %s", ErrUnknownSyncMessageType, msg.Type, s.peer.String())
 				return
 			}
 		}

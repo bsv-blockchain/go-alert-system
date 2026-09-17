@@ -13,6 +13,7 @@ var (
 	ErrSyncPanic                = errors.New("recovered from panic while processing sync message")
 	ErrSyncTimeout              = errors.New("sync from peer process timed out")
 	ErrUnexpectedSequenceNumber = errors.New("peer sent an alert with an unexpected sequence number")
+	ErrUnknownSyncMessageType   = errors.New("peer sent an unknown sync message type")
 	ErrPriorAlertMissing        = errors.New("alert preceding this sequence number is not stored")
 	ErrDuplicateAlert           = errors.New("alert with this sequence number is already stored")
 )

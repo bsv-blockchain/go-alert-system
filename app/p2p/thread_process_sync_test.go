@@ -228,7 +228,9 @@ func TestStreamThread_ProcessSyncMessage(t *testing.T) {
 		stream := &scriptedStream{reader: bytes.NewReader(unknown), conn: &fakeConn{}}
 		thread := &StreamThread{config: deps, ctx: context.Background(), stream: stream}
 
-		require.NoError(t, thread.ProcessSyncMessage(context.Background()))
+		err := thread.ProcessSyncMessage(context.Background())
+		require.ErrorIs(t, err, ErrUnknownSyncMessageType,
+			"a protocol violation must not be reported to the caller as a successful sync")
 		require.True(t, stream.isClosed())
 	})
 
@@ -284,7 +286,18 @@ func TestStreamThread_ProcessSyncMessage(t *testing.T) {
 
 		require.NoError(t, thread.ProcessSyncMessage(context.Background()))
 		require.True(t, stream.isClosed())
-		require.GreaterOrEqual(t, stream.written.Len(), 2, "both requests should be answered")
+
+		// Decode both replies: a byte-length assertion is satisfied by a single reply,
+		// so it cannot catch a regression that stops after the first frame.
+		r := bytes.NewReader(stream.written.Bytes())
+		for i := range 2 {
+			body, frameErr := readSyncFrame(r, config.DefaultP2PMaxMessageSizeBytes)
+			require.NoErrorf(t, frameErr, "reply %d must be a complete frame", i+1)
+			msg, msgErr := NewSyncMessageFromBytes(body)
+			require.NoErrorf(t, msgErr, "reply %d must decode", i+1)
+			require.Equalf(t, byte(IGotLatest), msg.Type, "reply %d must answer IWantLatest", i+1)
+		}
+		require.Zero(t, r.Len(), "exactly two replies should have been written")
 	})
 }
 
@@ -353,12 +366,7 @@ func TestStreamThread_syncConfigHelpers(t *testing.T) {
 // decodeFramedSyncMessage strips the varint length prefix and parses the sync message.
 func decodeFramedSyncMessage(t *testing.T, framed []byte) *SyncMessage {
 	t.Helper()
-	r := bytes.NewReader(framed)
-	var vi util.VarInt
-	_, err := vi.ReadFrom(r)
-	require.NoError(t, err)
-	body := make([]byte, vi)
-	_, err = io.ReadFull(r, body)
+	body, err := readSyncFrame(bytes.NewReader(framed), config.DefaultP2PMaxMessageSizeBytes)
 	require.NoError(t, err)
 	msg, err := NewSyncMessageFromBytes(body)
 	require.NoError(t, err)
