@@ -37,6 +37,12 @@ var (
 	}
 )
 
+// DefaultP2PMaxMessageSizeBytes is the default maximum size, in bytes, of a single sync
+// frame read from a peer stream (2 MiB — headroom over gossipsub's 1 MiB message limit).
+// Declared as an untyped constant so it is assignable to both the int config field and
+// the uint64 frame-size guard without an explicit conversion.
+const DefaultP2PMaxMessageSizeBytes = 2 * 1024 * 1024
+
 // Application configuration constants
 var (
 	ApplicationName                = "alert_system"                // Application name used in places where we need an application name space
@@ -46,6 +52,7 @@ var (
 	DefaultServerShutdown          = 5 * time.Second               // Default server shutdown delay time (to finish any requests or internal processes)
 	DefaultPeerDiscoveryInterval   = 10 * time.Minute              // Default peer discovery refresh interval
 	DefaultAlertProcessingInterval = 5 * time.Minute               // Default alert processing retry interval
+	DefaultSyncTimeout             = time.Minute                   // Default maximum duration for a single peer sync exchange
 	LocalPrivateKeyDefault         = "alert_system_private_key"    // Default local private key
 	LocalPrivateKeyDirectory       = ".bitcoin"                    // Default local private key directory
 )
@@ -107,6 +114,8 @@ type (
 		PrivateKey            string        `json:"private_key" mapstructure:"private_key"`
 		TopicName             string        `json:"topic_name" mapstructure:"topic_name"`                           // TopicName is the name of the topic to subscribe to
 		PeerDiscoveryInterval time.Duration `json:"peer_discovery_interval" mapstructure:"peer_discovery_interval"` // PeerDiscoveryInterval is the interval in which we will refresh the peer table and check peers for missing messages
+		MaxMessageSizeBytes   int           `json:"max_message_size_bytes" mapstructure:"max_message_size_bytes"`   // MaxMessageSizeBytes is the maximum size in bytes of a single sync frame read from a peer stream
+		SyncTimeout           time.Duration `json:"sync_timeout" mapstructure:"sync_timeout"`                       // SyncTimeout is the maximum duration allowed for a single peer sync exchange
 	}
 
 	// RPCConfig is the configuration for the RPC client

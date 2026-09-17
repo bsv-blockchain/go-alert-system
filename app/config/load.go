@@ -146,6 +146,16 @@ func requireP2P(_appConfig *Config) error {
 		_appConfig.P2P.PeerDiscoveryInterval = DefaultPeerDiscoveryInterval
 	}
 
+	// Load the maximum sync frame size (bounds allocation from an untrusted peer stream)
+	if _appConfig.P2P.MaxMessageSizeBytes <= 0 {
+		_appConfig.P2P.MaxMessageSizeBytes = DefaultP2PMaxMessageSizeBytes
+	}
+
+	// Load the per-exchange sync timeout
+	if _appConfig.P2P.SyncTimeout <= 0 {
+		_appConfig.P2P.SyncTimeout = DefaultSyncTimeout
+	}
+
 	// Load the p2p ip (local, ip address or domain name)
 	// todo better validation of what is a valid IP, domain name or local address
 	if len(_appConfig.P2P.IP) < 5 {
