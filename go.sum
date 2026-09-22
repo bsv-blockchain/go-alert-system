@@ -26,10 +26,10 @@ github.com/bsv-blockchain/go-bc v1.2.0 h1:6VDbUHyi4ZAQHzTi1Xzv562SHyvfTVnRYx4bVN
 github.com/bsv-blockchain/go-bc v1.2.0/go.mod h1:G8MZVVmGegvSogql+7N7DVwC7GvxJEk8PIjqPP5/mOE=
 github.com/bsv-blockchain/go-bn v1.2.0 h1:zgzpIFoVJMQ2OHiD5ZOZ9pRNT5s+NtAFEUQ7d1YENSg=
 github.com/bsv-blockchain/go-bn v1.2.0/go.mod h1:+odp1U5virtDVraXBNpkBUaI1DE7zD3Mot62HUzcjzc=
-github.com/bsv-blockchain/go-bt/v2 v2.7.1 h1:yiinRgtCryYFea4OVgUSi2qUd+ubfAJP7yKz4Z8AVAk=
-github.com/bsv-blockchain/go-bt/v2 v2.7.1/go.mod h1:v/HVFIBC2ZIt1bZ88F2TECfDuIG7XeeLYphy18NeQmM=
-github.com/bsv-blockchain/go-sdk v1.5.1 h1:NGqtUAVjSfwrWPEX2bFNt7yAuwRa0b3G6El4tHZDNHc=
-github.com/bsv-blockchain/go-sdk v1.5.1/go.mod h1:clGHSZoOwrnqJrzEw4VHYZk3JQXbrr+mnybCXZCdrt4=
+github.com/bsv-blockchain/go-bt/v2 v2.7.2 h1:9nR3D6ZmRmx8CwI4SuWVS2d8botQdkCJ63AqMkH2g94=
+github.com/bsv-blockchain/go-bt/v2 v2.7.2/go.mod h1:6+EdHO2yz0InWrmFaOUK/vvHieMI+UCdn1VvRu0cURE=
+github.com/bsv-blockchain/go-sdk v1.5.2 h1:CMRF9HcXQxvDgQK0n6wTy4/RyoGGL4HAjzHmCpqCgCs=
+github.com/bsv-blockchain/go-sdk v1.5.2/go.mod h1:clGHSZoOwrnqJrzEw4VHYZk3JQXbrr+mnybCXZCdrt4=
 github.com/canonical/go-sp800.90a-drbg v0.0.0-20210314144037-6eeb1040d6c3 h1:oe6fCvaEpkhyW3qAicT0TnGtyht/UrgvOwMcEgLb7Aw=
 github.com/canonical/go-sp800.90a-drbg v0.0.0-20210314144037-6eeb1040d6c3/go.mod h1:qdP0gaj0QtgX2RUZhnlVrceJ+Qln8aSlDyJwelLLFeM=
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=
