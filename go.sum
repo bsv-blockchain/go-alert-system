@@ -26,10 +26,10 @@ github.com/bsv-blockchain/go-bc v1.2.0 h1:6VDbUHyi4ZAQHzTi1Xzv562SHyvfTVnRYx4bVN
 github.com/bsv-blockchain/go-bc v1.2.0/go.mod h1:G8MZVVmGegvSogql+7N7DVwC7GvxJEk8PIjqPP5/mOE=
 github.com/bsv-blockchain/go-bn v1.2.0 h1:zgzpIFoVJMQ2OHiD5ZOZ9pRNT5s+NtAFEUQ7d1YENSg=
 github.com/bsv-blockchain/go-bn v1.2.0/go.mod h1:+odp1U5virtDVraXBNpkBUaI1DE7zD3Mot62HUzcjzc=
-github.com/bsv-blockchain/go-bt/v2 v2.7.2 h1:9nR3D6ZmRmx8CwI4SuWVS2d8botQdkCJ63AqMkH2g94=
-github.com/bsv-blockchain/go-bt/v2 v2.7.2/go.mod h1:6+EdHO2yz0InWrmFaOUK/vvHieMI+UCdn1VvRu0cURE=
-github.com/bsv-blockchain/go-sdk v1.5.2 h1:CMRF9HcXQxvDgQK0n6wTy4/RyoGGL4HAjzHmCpqCgCs=
-github.com/bsv-blockchain/go-sdk v1.5.2/go.mod h1:clGHSZoOwrnqJrzEw4VHYZk3JQXbrr+mnybCXZCdrt4=
+github.com/bsv-blockchain/go-bt/v2 v2.7.3 h1:nTbbC3m1qup9YnCNiG677unG2RGppNhBfzdDl+e1xe4=
+github.com/bsv-blockchain/go-bt/v2 v2.7.3/go.mod h1:B4xn7g3m7YaPrXzWmvnCg5xiYdR56Beu/eOjFm78LCw=
+github.com/bsv-blockchain/go-sdk v1.6.0 h1:VTi/ceJFdVndLNPvoUh53z2+Yf2RxMMuQj+dLc3C9jg=
+github.com/bsv-blockchain/go-sdk v1.6.0/go.mod h1:F7wz/PdFcLNIFlvkzKJ7dZexbZoRzwR0VzQYKUCaXqU=
 github.com/canonical/go-sp800.90a-drbg v0.0.0-20210314144037-6eeb1040d6c3 h1:oe6fCvaEpkhyW3qAicT0TnGtyht/UrgvOwMcEgLb7Aw=
 github.com/canonical/go-sp800.90a-drbg v0.0.0-20210314144037-6eeb1040d6c3/go.mod h1:qdP0gaj0QtgX2RUZhnlVrceJ+Qln8aSlDyJwelLLFeM=
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=
@@ -214,8 +214,8 @@ github.com/mrz1836/go-logger v1.0.6 h1:5eGbtlMEX/5DDUyESTTqzbOggWTuCNkLGJ/CxJpo0
 github.com/mrz1836/go-logger v1.0.6/go.mod h1:4OX+yIkLiY4rcM26gZJZjly/f7fyhOEiRVHecZSyTTs=
 github.com/mrz1836/go-parameters v1.0.8 h1:OCdZfS+78QEdBMEVa/BE+eB6KaLegzZqxLSgScJB03k=
 github.com/mrz1836/go-parameters v1.0.8/go.mod h1:ypu7e/OrfujOZBaHVK9cjB9mOBwUrVw+PJL5OKLsXXw=
-github.com/mrz1836/go-whatsonchain v1.1.0 h1:m/bVHDx8t5zDcuV/l4h6ZXPcu0DQ7ZZB/p+Oy/llC1c=
-github.com/mrz1836/go-whatsonchain v1.1.0/go.mod h1:SAMQltVzWjjBSSIM9KBoLRTFuv9fIrejyEUK95qPDZI=
+github.com/mrz1836/go-whatsonchain v1.3.0 h1:uOq5mHPTMUfiyMAFv+wqRgZXZ5L3CrObaIdShnX/yzU=
+github.com/mrz1836/go-whatsonchain v1.3.0/go.mod h1:SAMQltVzWjjBSSIM9KBoLRTFuv9fIrejyEUK95qPDZI=
 github.com/multiformats/go-base32 v0.1.0 h1:pVx9xoSPqEIQG8o+UbAe7DNi51oej1NtK+aGkbLYxPE=
 github.com/multiformats/go-base32 v0.1.0/go.mod h1:Kj3tFY6zNr+ABYMqeUNeGvkIC/UYgtWibDcT0rExnbI=
 github.com/multiformats/go-base36 v0.2.0 h1:lFsAbNOGeKtuKozrtBsAkSVhv1p9D0/qedU9rQyccr0=
