@@ -139,12 +139,15 @@ func NewServer(o ServerOptions) (*Server, error) {
 		libp2p.EnableHolePunching(),
 		libp2p.AddrsFactory(addressFactory),
 		libp2p.ConnectionGater(ipFilter),
-		libp2p.EnableNATService(), // answer AutoNAT dial-back probes so peers can learn their reachability
 	); err != nil {
 		return nil, err
 	}
 
-	// Track reachability so the address factory stops advertising a guessed IP once we're known to be private
+	// Track reachability so the address factory stops advertising a guessed IP once we're known to be private.
+	// Reachability comes from the AutoNAT v1 client, which relies on dial-back probes from peers running the
+	// AutoNAT service. Publicly reachable Kubo nodes on the IPFS DHT we join (see initDHT) provide this by
+	// default, so alert nodes don't run the service themselves. Kubo plans to remove AutoNAT v1; if that happens,
+	// reachability stays Unknown and the guessed IP keeps being advertised (cached, so no leak) until this moves to v2.
 	reachabilitySub, err := h.EventBus().Subscribe(new(event.EvtLocalReachabilityChanged))
 	if err != nil {
 		_ = h.Close()
