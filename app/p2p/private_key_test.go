@@ -127,6 +127,9 @@ func TestNewServer_PrivateKeyPathStableAcrossRestarts(t *testing.T) {
 	deps.P2P.PrivateKeyPath = filepath.Join(t.TempDir(), "alert_system_private_key")
 	deps.P2P.IP = "127.0.0.1"
 	deps.P2P.Port = "0"
+	// A broadcast IP means the address factory always has an address to advertise,
+	// so it never starts a real public IP lookup in the background
+	deps.P2P.BroadcastIP = "127.0.0.1"
 
 	start := func() peer.ID {
 		s, err := NewServer(ServerOptions{Config: deps})
