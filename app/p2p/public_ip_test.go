@@ -42,13 +42,12 @@ func (c *fakeClock) Advance(d time.Duration) {
 func newTestCache(fetch func(ctx context.Context) (string, error)) (*publicIPCache, *fakeClock, *atomic.Int32) {
 	clock := &fakeClock{now: time.Unix(1_700_000_000, 0)}
 	calls := new(atomic.Int32)
-	return &publicIPCache{
-		fetch: func(ctx context.Context) (string, error) {
-			calls.Add(1)
-			return fetch(ctx)
-		},
-		now: clock.Now,
-	}, clock, calls
+	c := newPublicIPCache(func(ctx context.Context) (string, error) {
+		calls.Add(1)
+		return fetch(ctx)
+	})
+	c.now = clock.Now
+	return c, clock, calls
 }
 
 // waitForRefresh blocks until the background refresh has finished
@@ -170,11 +169,7 @@ func TestGetPublicIP(t *testing.T) {
 			}))
 			defer srv.Close()
 
-			orig := publicIPURL
-			publicIPURL = srv.URL
-			defer func() { publicIPURL = orig }()
-
-			got, err := GetPublicIP(context.Background())
+			got, err := getPublicIPFrom(context.Background(), srv.URL)
 			if tt.wantErr {
 				require.Error(t, err)
 				return
@@ -226,12 +221,8 @@ func assertSingleConnection(t *testing.T, status int, body string, wantErr bool)
 	srv.Start()
 	defer srv.Close()
 
-	orig := publicIPURL
-	publicIPURL = srv.URL
-	defer func() { publicIPURL = orig }()
-
 	for i := 0; i < 20; i++ {
-		_, err := GetPublicIP(context.Background())
+		_, err := getPublicIPFrom(context.Background(), srv.URL)
 		if wantErr {
 			require.Error(t, err)
 		} else {
@@ -291,4 +282,27 @@ func TestAddressFactory_PublicIPFallback(t *testing.T) {
 		require.Len(t, got, 1)
 		assert.True(t, got[0].Equal(ext))
 	})
+}
+
+func TestPublicIPCache_CloseCancelsLookupAndStopsRefreshing(t *testing.T) {
+	started := make(chan struct{})
+	c, clock, calls := newTestCache(func(ctx context.Context) (string, error) {
+		close(started)
+		<-ctx.Done()
+		return "", ctx.Err()
+	})
+
+	c.get()
+	<-started
+	c.close()
+	waitForRefresh(t, c)
+
+	// No new lookups after close, even once the backoff has expired
+	clock.Advance(publicIPFailureBackoff)
+	assert.Empty(t, c.get())
+	c.mu.Lock()
+	refreshing := c.refreshing
+	c.mu.Unlock()
+	assert.False(t, refreshing)
+	assert.Equal(t, int32(1), calls.Load())
 }
