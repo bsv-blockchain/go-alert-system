@@ -22,8 +22,12 @@ const (
 	// publicIPFailureBackoff is how long to wait before retrying after a failed lookup
 	publicIPFailureBackoff = time.Minute
 
-	// publicIPMaxBodyBytes caps how much of the lookup response is read
+	// publicIPMaxBodyBytes caps how much of the lookup response is parsed
 	publicIPMaxBodyBytes = 64
+
+	// publicIPMaxDrainBytes caps how much of the remaining response is discarded so the
+	// connection can be reused; anything larger just closes the connection
+	publicIPMaxDrainBytes = 64 << 10
 )
 
 // ErrInvalidPublicIP is returned when the lookup service does not return a valid IPv4 address
@@ -61,12 +65,12 @@ func GetPublicIP(ctx context.Context) (string, error) {
 		return "", err
 	}
 	defer func() {
+		// Drain whatever wasn't parsed so the connection can be reused
+		_, _ = io.Copy(io.Discard, io.LimitReader(resp.Body, publicIPMaxDrainBytes))
 		_ = resp.Body.Close()
 	}()
 
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
-		// Drain so the connection can be reused
-		_, _ = io.Copy(io.Discard, io.LimitReader(resp.Body, publicIPMaxBodyBytes))
 		return "", fmt.Errorf("%w: status %d", ErrPublicIPLookupStatus, resp.StatusCode)
 	}
 
@@ -75,11 +79,12 @@ func GetPublicIP(ctx context.Context) (string, error) {
 		return "", err
 	}
 
-	ip := strings.TrimSpace(string(body))
-	if parsed := net.ParseIP(ip); parsed == nil || parsed.To4() == nil {
+	parsed := net.ParseIP(strings.TrimSpace(string(body)))
+	if parsed == nil || parsed.To4() == nil {
 		return "", ErrInvalidPublicIP
 	}
-	return ip, nil
+	// Return the canonical dotted form (e.g. `::ffff:192.0.2.1` becomes `192.0.2.1`) so it fits an /ip4/ multiaddr
+	return parsed.To4().String(), nil
 }
 
 // publicIPCache resolves the public IP in the background and caches the result,

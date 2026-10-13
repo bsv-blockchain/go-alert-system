@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -155,7 +156,9 @@ func TestGetPublicIP(t *testing.T) {
 		{name: "trims whitespace", status: http.StatusOK, body: " 203.0.113.7\n", want: "203.0.113.7"},
 		{name: "non-200", status: http.StatusTooManyRequests, body: "slow down", wantErr: true},
 		{name: "html body", status: http.StatusOK, body: "<html>blocked</html>", wantErr: true},
+		{name: "ipv4-mapped ipv6 is canonicalized", status: http.StatusOK, body: "::ffff:203.0.113.7", want: "203.0.113.7"},
 		{name: "ipv6", status: http.StatusOK, body: "2001:db8::1", wantErr: true},
+		{name: "oversized body", status: http.StatusOK, body: strings.Repeat("1", 200), wantErr: true},
 		{name: "empty", status: http.StatusOK, body: "", wantErr: true},
 	}
 
@@ -183,11 +186,37 @@ func TestGetPublicIP(t *testing.T) {
 }
 
 // TestGetPublicIP_ReusesConnection verifies repeated lookups share one connection
-// instead of opening (and leaking) a new one per call
+// instead of opening (and leaking) a new one per call, including when the response
+// is an error or larger than what is parsed
 func TestGetPublicIP_ReusesConnection(t *testing.T) {
+	tests := []struct {
+		name    string
+		status  int
+		body    string
+		wantErr bool
+	}{
+		{name: "valid ip", status: http.StatusOK, body: "203.0.113.7"},
+		{name: "oversized error page", status: http.StatusTooManyRequests, body: strings.Repeat("x", 4096), wantErr: true},
+		{name: "oversized success body", status: http.StatusOK, body: strings.Repeat("x", 4096), wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Start each case with no pooled connections
+			publicIPClient.CloseIdleConnections()
+			assertSingleConnection(t, tt.status, tt.body, tt.wantErr)
+		})
+	}
+}
+
+// assertSingleConnection performs 20 lookups against a server returning status/body
+// and checks they all went over one TCP connection
+func assertSingleConnection(t *testing.T, status int, body string, wantErr bool) {
+	t.Helper()
 	var newConns atomic.Int32
 	srv := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		_, _ = w.Write([]byte("203.0.113.7"))
+		w.WriteHeader(status)
+		_, _ = w.Write([]byte(body))
 	}))
 	srv.Config.ConnState = func(_ net.Conn, state http.ConnState) {
 		if state == http.StateNew {
@@ -203,7 +232,11 @@ func TestGetPublicIP_ReusesConnection(t *testing.T) {
 
 	for i := 0; i < 20; i++ {
 		_, err := GetPublicIP(context.Background())
-		require.NoError(t, err)
+		if wantErr {
+			require.Error(t, err)
+		} else {
+			require.NoError(t, err)
+		}
 	}
 	assert.Equal(t, int32(1), newConns.Load())
 }
