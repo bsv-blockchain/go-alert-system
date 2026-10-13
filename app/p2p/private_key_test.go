@@ -135,6 +135,8 @@ func TestNewServer_PrivateKeyPathStableAcrossRestarts(t *testing.T) {
 		s, err := NewServer(ServerOptions{Config: deps})
 		require.NoError(t, err)
 		id := s.host.ID()
+		// Closing the host doesn't close event bus subscriptions, so close it to stop the reachability goroutine
+		require.NoError(t, s.reachabilitySub.Close())
 		require.NoError(t, s.host.Close())
 		return id
 	}

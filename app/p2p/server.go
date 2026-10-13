@@ -146,8 +146,9 @@ func NewServer(o ServerOptions) (*Server, error) {
 	// Track reachability so the address factory stops advertising a guessed IP once we're known to be private.
 	// Reachability comes from the AutoNAT v1 client, which relies on dial-back probes from peers running the
 	// AutoNAT service. Publicly reachable Kubo nodes on the IPFS DHT we join (see initDHT) provide this by
-	// default, so alert nodes don't run the service themselves. Kubo plans to remove AutoNAT v1; if that happens,
-	// reachability stays Unknown and the guessed IP keeps being advertised (cached, so no leak) until this moves to v2.
+	// default, so alert nodes don't run the service themselves. With no such peer connected, the client can't probe
+	// and reachability keeps its last value: Unknown on a fresh node (the cached guessed IP is advertised), or
+	// whatever was last observed. Kubo plans to remove AutoNAT v1, at which point this should move to v2.
 	reachabilitySub, err := h.EventBus().Subscribe(new(event.EvtLocalReachabilityChanged))
 	if err != nil {
 		_ = h.Close()
