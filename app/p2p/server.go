@@ -1,6 +1,7 @@
 package p2p
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"encoding/hex"
@@ -77,13 +78,10 @@ func NewServer(o ServerOptions) (*Server, error) {
 			return nil, err
 		}
 	} else {
-		// Attempt to read the private key from the file
-		pk, err = readPrivateKey(o.Config.P2P.PrivateKeyPath)
+		// Load the private key from the file, generating one only if the file doesn't exist yet
+		pk, err = loadOrCreatePrivateKeyFile(o.Config.P2P.PrivateKeyPath)
 		if err != nil {
-			// If the file doesn't exist, generate a new private key
-			if pk, err = generatePrivateKey(o.Config.P2P.PrivateKeyPath); err != nil {
-				return nil, err
-			}
+			return nil, err
 		}
 	}
 
@@ -444,10 +442,53 @@ func generatePrivateKey(filePath string) (*crypto.PrivKey, error) {
 	}
 
 	// Save private key to a file
-	if err = os.WriteFile(filePath, privateBytes, 0o644); err != nil { //nolint:gosec // This is a local private key
-		return nil, err
+	if err = os.WriteFile(filePath, privateBytes, 0o600); err != nil {
+		return nil, fmt.Errorf("failed to write p2p private key file %s: %w", filePath, err)
 	}
 
+	return &privateKey, nil
+}
+
+// loadOrCreatePrivateKeyFile loads the private key stored at `private_key_path`.
+// A new key is generated and written only when the file doesn't exist (or is an empty
+// placeholder); any other read or parse failure is returned so an existing identity is
+// never silently overwritten.
+func loadOrCreatePrivateKeyFile(filePath string) (*crypto.PrivKey, error) {
+	data, err := os.ReadFile(filePath) //nolint:gosec // path comes from operator configuration
+	switch {
+	case errors.Is(err, os.ErrNotExist):
+		return generatePrivateKey(filePath)
+	case err != nil:
+		return nil, fmt.Errorf("failed to read p2p private key file %s: %w", filePath, err)
+	case len(bytes.TrimSpace(data)) == 0:
+		return generatePrivateKey(filePath)
+	}
+
+	pk, err := parsePrivateKeyFile(data)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %s", err, filePath)
+	}
+	return pk, nil
+}
+
+// parsePrivateKeyFile parses the contents of a private key file. It accepts the
+// libp2p protobuf encoding written by generatePrivateKey, or hex text containing either
+// that encoding or a raw Ed25519 key (the same format as `private_key`)
+func parsePrivateKeyFile(data []byte) (*crypto.PrivKey, error) {
+	if raw, err := hex.DecodeString(string(bytes.TrimSpace(data))); err == nil {
+		if privateKey, err := crypto.UnmarshalPrivateKey(raw); err == nil {
+			return &privateKey, nil
+		}
+		if privateKey, err := crypto.UnmarshalEd25519PrivateKey(raw); err == nil {
+			return &privateKey, nil
+		}
+		return nil, ErrInvalidPrivateKeyFile
+	}
+
+	privateKey, err := crypto.UnmarshalPrivateKey(data)
+	if err != nil {
+		return nil, ErrInvalidPrivateKeyFile
+	}
 	return &privateKey, nil
 }
 
