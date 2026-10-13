@@ -6,10 +6,9 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"io"
 	"net"
-	"net/http"
 	"os"
+	"sync/atomic"
 	"time"
 
 	"github.com/libp2p/go-libp2p"
@@ -17,6 +16,7 @@ import (
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/discovery"
+	"github.com/libp2p/go-libp2p/core/event"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -50,6 +50,7 @@ type Server struct {
 	config                        *config.Config
 	host                          host.Host
 	privateKey                    *crypto.PrivKey
+	reachabilitySub               event.Subscription
 	subscriptions                 map[string]*pubsub.Subscription
 	topicNames                    []string
 	topics                        map[string]*pubsub.Topic
@@ -94,35 +95,14 @@ func NewServer(o ServerOptions) (*Server, error) {
 		}
 	}
 
-	// define address factory to remove all private IPs from being broadcasted
-	addressFactory := func(addrs []maddr.Multiaddr) []maddr.Multiaddr {
-		var publicAddrs []maddr.Multiaddr
-		for _, addr := range addrs {
-			// if IP is not private, add it to the list
-			if !isPrivateIP(addr) || o.Config.P2P.AllowPrivateIPs {
-				publicAddrs = append(publicAddrs, addr)
-			}
-		}
-		// If a user specified a broadcast IP append it here
-		if extMultiAddr != nil {
-			// here we're appending the external facing multiaddr we created above to the addressFactory so it will be broadcast out when I connect to a bootstrap node.
-			publicAddrs = append(publicAddrs, extMultiAddr)
-		}
+	// The public IP fallback is resolved in the background and cached, never on the address factory's hot path
+	publicIP := newPublicIPCache()
 
-		// If we still don't have any advertisable addresses then attempt to grab it from `https://ifconfig.me/ip`
-		if len(publicAddrs) == 0 {
-			// If no public addresses are set, let's attempt to grab it publicly
-			// Ignore errors because we don't care if we can't find it
-			ifconfig, _ := GetPublicIP(context.Background())
-			if len(ifconfig) > 0 {
-				addr, _ := maddr.NewMultiaddr(fmt.Sprintf("/ip4/%s/tcp/%s", ifconfig, o.Config.P2P.Port))
-				if addr != nil {
-					publicAddrs = append(publicAddrs, addr)
-				}
-			}
-		}
-		return publicAddrs
-	}
+	// Latest AutoNAT reachability, updated from the host event bus once the host is created
+	reachability := new(atomic.Int32)
+
+	// define address factory to remove all private IPs from being broadcasted
+	addressFactory := newAddressFactory(o.Config.P2P.Port, o.Config.P2P.AllowPrivateIPs, extMultiAddr, publicIP, reachability)
 
 	// Create an IP filter to block private network ranges from being dialed
 	ipFilter, err := conngater.NewBasicConnectionGater(nil)
@@ -161,9 +141,25 @@ func NewServer(o ServerOptions) (*Server, error) {
 		libp2p.EnableHolePunching(),
 		libp2p.AddrsFactory(addressFactory),
 		libp2p.ConnectionGater(ipFilter),
+		libp2p.EnableNATService(), // answer AutoNAT dial-back probes so peers can learn their reachability
 	); err != nil {
 		return nil, err
 	}
+
+	// Track reachability so the address factory stops advertising a guessed IP once we're known to be private
+	reachabilitySub, err := h.EventBus().Subscribe(new(event.EvtLocalReachabilityChanged))
+	if err != nil {
+		_ = h.Close()
+		return nil, err
+	}
+	go func() {
+		for e := range reachabilitySub.Out() {
+			if evt, ok := e.(event.EvtLocalReachabilityChanged); ok {
+				reachability.Store(int32(evt.Reachability)) //nolint:gosec // small enum value
+				o.Config.Services.Log.Debugf("p2p reachability changed: %s", evt.Reachability)
+			}
+		}
+	}()
 
 	// Print out the peer ID and addresses
 	o.Config.Services.Log.Debugf("peer ID: %s", h.ID().String())
@@ -177,39 +173,44 @@ func NewServer(o ServerOptions) (*Server, error) {
 		host:                          h,
 		topicNames:                    o.TopicNames,
 		privateKey:                    pk,
+		reachabilitySub:               reachabilitySub,
 		config:                        o.Config,
 		quitPeerInitializationChannel: make(chan bool, 1),
 	}, nil
 }
 
-// GetPublicIP fetches the public IP address from ifconfig.me
-func GetPublicIP(ctx context.Context) (string, error) {
-	transport := &http.Transport{
-		DialContext: func(ctx context.Context, _, addr string) (net.Conn, error) {
-			// Force the use of IPv4 by specifying 'tcp4' as the network
-			return (&net.Dialer{}).DialContext(ctx, "tcp4", addr)
-		},
-		TLSHandshakeTimeout: 10 * time.Second,
-	}
-	client := &http.Client{
-		Transport: transport,
-	}
-	req, err := http.NewRequestWithContext(ctx, "GET", "https://ifconfig.me/ip", nil)
-	if err != nil {
-		return "", err
-	}
+// newAddressFactory builds the libp2p address factory: it drops private addresses (unless allowed),
+// appends the configured broadcast address, and as a last resort advertises the cached public IP
+func newAddressFactory(port string, allowPrivateIPs bool, extMultiAddr maddr.Multiaddr,
+	publicIP *publicIPCache, reachability *atomic.Int32,
+) func([]maddr.Multiaddr) []maddr.Multiaddr {
+	return func(addrs []maddr.Multiaddr) []maddr.Multiaddr {
+		var publicAddrs []maddr.Multiaddr
+		for _, addr := range addrs {
+			// if IP is not private, add it to the list
+			if !isPrivateIP(addr) || allowPrivateIPs {
+				publicAddrs = append(publicAddrs, addr)
+			}
+		}
+		// If a user specified a broadcast IP append it here
+		if extMultiAddr != nil {
+			// here we're appending the external facing multiaddr we created above to the addressFactory so it will be broadcast out when I connect to a bootstrap node.
+			publicAddrs = append(publicAddrs, extMultiAddr)
+		}
 
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", err
+		// If we still don't have any advertisable addresses (observed addresses from identify are
+		// already included in addrs), fall back to the cached `https://ifconfig.me/ip` lookup.
+		// Skip it entirely once AutoNAT has determined we can't accept inbound connections.
+		if len(publicAddrs) == 0 && network.Reachability(reachability.Load()) != network.ReachabilityPrivate {
+			if ip := publicIP.get(); ip != "" {
+				addr, _ := maddr.NewMultiaddr(fmt.Sprintf("/ip4/%s/tcp/%s", ip, port))
+				if addr != nil {
+					publicAddrs = append(publicAddrs, addr)
+				}
+			}
+		}
+		return publicAddrs
 	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-
-	return string(body), resp.Body.Close()
 }
 
 // Function to check if an IP address is private
@@ -358,6 +359,9 @@ func (s *Server) Stop(_ context.Context) error {
 
 	s.config.Services.Log.Debugf("removing stream handler to stop allowing connections")
 	s.host.RemoveStreamHandler(protocol.ID(s.config.P2P.AlertSystemProtocolID))
+	if s.reachabilitySub != nil {
+		_ = s.reachabilitySub.Close()
+	}
 	s.config.Services.Log.Debugf("shutting down libp2p host")
 	err := s.host.Close()
 	if err != nil {
