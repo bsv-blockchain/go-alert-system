@@ -137,7 +137,7 @@ func TestNewServer_PrivateKeyPathStableAcrossRestarts(t *testing.T) {
 		})
 		require.NoError(t, err)
 		id := s.host.ID()
-		require.NoError(t, s.closeHost())
+		require.NoError(t, s.closeHostResources())
 		return id
 	}
 

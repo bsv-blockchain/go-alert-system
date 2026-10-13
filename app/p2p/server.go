@@ -369,7 +369,7 @@ func (s *Server) Stop(_ context.Context) error {
 	s.config.Services.Log.Debugf("removing stream handler to stop allowing connections")
 	s.host.RemoveStreamHandler(protocol.ID(s.config.P2P.AlertSystemProtocolID))
 	s.config.Services.Log.Debugf("shutting down libp2p host")
-	if err := s.closeHost(); err != nil {
+	if err := s.closeHostResources(); err != nil {
 		return err
 	}
 	s.config.Services.Log.Debugf("shutting down dht") // this is maybe redundant
@@ -554,9 +554,9 @@ func (s *Server) Subscribe(ctx context.Context, subscriber *pubsub.Subscription,
 	}
 }
 
-// closeHost releases everything NewServer created: the public IP lookup, the reachability
+// closeHostResources releases everything NewServer created: the public IP lookup, the reachability
 // subscription (host.Close doesn't close event bus subscriptions) and the libp2p host
-func (s *Server) closeHost() error {
+func (s *Server) closeHostResources() error {
 	if s.publicIP != nil {
 		s.publicIP.close()
 	}

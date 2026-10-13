@@ -99,11 +99,11 @@ type publicIPCache struct {
 	ip         string
 	expires    time.Time
 	refreshing bool
-	closed     bool
 
-	// ctx is cancelled by close() to abort an in-flight lookup when the server shuts down
+	// ctx is cancelled by close() to abort an in-flight lookup and stop further refreshes
 	ctx    context.Context //nolint:containedctx // lifetime of the cache, cancelled by close()
 	cancel context.CancelFunc
+	wg     sync.WaitGroup
 
 	fetch func(ctx context.Context) (string, error)
 	now   func() time.Time
@@ -129,23 +129,25 @@ func (c *publicIPCache) get() string {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	if !c.closed && !c.refreshing && !c.now().Before(c.expires) {
+	if c.ctx.Err() == nil && !c.refreshing && !c.now().Before(c.expires) {
 		c.refreshing = true
+		c.wg.Add(1)
 		go c.refresh()
 	}
 	return c.ip
 }
 
-// close cancels any in-flight lookup and stops further refreshes
+// close cancels any in-flight lookup, stops further refreshes and waits for the refresh goroutine to exit
 func (c *publicIPCache) close() {
 	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.closed = true
 	c.cancel()
+	c.mu.Unlock()
+	c.wg.Wait()
 }
 
 // refresh performs one lookup and records the result
 func (c *publicIPCache) refresh() {
+	defer c.wg.Done()
 	ctx, cancel := context.WithTimeout(c.ctx, publicIPRequestTimeout)
 	defer cancel()
 
@@ -154,6 +156,10 @@ func (c *publicIPCache) refresh() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.refreshing = false
+	if c.ctx.Err() != nil {
+		// Closed while the lookup was in flight; don't record anything
+		return
+	}
 	if err != nil {
 		// Keep the last known IP, but back off before trying again
 		c.expires = c.now().Add(publicIPFailureBackoff)

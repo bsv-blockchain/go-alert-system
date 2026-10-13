@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -19,6 +20,9 @@ import (
 )
 
 var errLookupFailed = errors.New("lookup failed")
+
+// testPublicIP is a documentation-range (TEST-NET-3) address used as the looked-up public IP
+const testPublicIP = "203.0.113.7"
 
 // fakeClock is a manually advanced clock for the public IP cache
 type fakeClock struct {
@@ -62,7 +66,7 @@ func waitForRefresh(t *testing.T, c *publicIPCache) {
 
 func TestPublicIPCache_CachesWithinTTL(t *testing.T) {
 	c, clock, calls := newTestCache(func(context.Context) (string, error) {
-		return "203.0.113.7", nil
+		return testPublicIP, nil
 	})
 
 	// The first call never blocks on the network; it kicks off a refresh
@@ -70,13 +74,13 @@ func TestPublicIPCache_CachesWithinTTL(t *testing.T) {
 	waitForRefresh(t, c)
 
 	for i := 0; i < 1000; i++ {
-		assert.Equal(t, "203.0.113.7", c.get())
+		assert.Equal(t, testPublicIP, c.get())
 	}
 	assert.Equal(t, int32(1), calls.Load())
 
 	// After the TTL expires the stale value is served while one refresh runs
 	clock.Advance(publicIPSuccessTTL)
-	assert.Equal(t, "203.0.113.7", c.get())
+	assert.Equal(t, testPublicIP, c.get())
 	waitForRefresh(t, c)
 	assert.Equal(t, int32(2), calls.Load())
 }
@@ -85,7 +89,7 @@ func TestPublicIPCache_SingleInFlightRefresh(t *testing.T) {
 	release := make(chan struct{})
 	c, _, calls := newTestCache(func(context.Context) (string, error) {
 		<-release
-		return "203.0.113.7", nil
+		return testPublicIP, nil
 	})
 
 	var wg sync.WaitGroup
@@ -101,7 +105,7 @@ func TestPublicIPCache_SingleInFlightRefresh(t *testing.T) {
 	waitForRefresh(t, c)
 
 	assert.Equal(t, int32(1), calls.Load())
-	assert.Equal(t, "203.0.113.7", c.get())
+	assert.Equal(t, testPublicIP, c.get())
 }
 
 func TestPublicIPCache_FailureBackoff(t *testing.T) {
@@ -130,7 +134,7 @@ func TestPublicIPCache_KeepsLastKnownIPOnFailure(t *testing.T) {
 		if fail.Load() {
 			return "", errLookupFailed
 		}
-		return "203.0.113.7", nil
+		return testPublicIP, nil
 	})
 
 	c.get()
@@ -140,7 +144,7 @@ func TestPublicIPCache_KeepsLastKnownIPOnFailure(t *testing.T) {
 	clock.Advance(publicIPSuccessTTL)
 	c.get()
 	waitForRefresh(t, c)
-	assert.Equal(t, "203.0.113.7", c.get())
+	assert.Equal(t, testPublicIP, c.get())
 }
 
 func TestGetPublicIP(t *testing.T) {
@@ -151,11 +155,11 @@ func TestGetPublicIP(t *testing.T) {
 		want    string
 		wantErr bool
 	}{
-		{name: "valid ip", status: http.StatusOK, body: "203.0.113.7", want: "203.0.113.7"},
-		{name: "trims whitespace", status: http.StatusOK, body: " 203.0.113.7\n", want: "203.0.113.7"},
+		{name: "valid ip", status: http.StatusOK, body: testPublicIP, want: testPublicIP},
+		{name: "trims whitespace", status: http.StatusOK, body: " 203.0.113.7\n", want: testPublicIP},
 		{name: "non-200", status: http.StatusTooManyRequests, body: "slow down", wantErr: true},
 		{name: "html body", status: http.StatusOK, body: "<html>blocked</html>", wantErr: true},
-		{name: "ipv4-mapped ipv6 is canonicalized", status: http.StatusOK, body: "::ffff:203.0.113.7", want: "203.0.113.7"},
+		{name: "ipv4-mapped ipv6 is canonicalized", status: http.StatusOK, body: "::ffff:203.0.113.7", want: testPublicIP},
 		{name: "ipv6", status: http.StatusOK, body: "2001:db8::1", wantErr: true},
 		{name: "oversized body", status: http.StatusOK, body: strings.Repeat("1", 200), wantErr: true},
 		{name: "empty", status: http.StatusOK, body: "", wantErr: true},
@@ -190,7 +194,7 @@ func TestGetPublicIP_ReusesConnection(t *testing.T) {
 		body    string
 		wantErr bool
 	}{
-		{name: "valid ip", status: http.StatusOK, body: "203.0.113.7"},
+		{name: "valid ip", status: http.StatusOK, body: testPublicIP},
 		{name: "oversized error page", status: http.StatusTooManyRequests, body: strings.Repeat("x", 4096), wantErr: true},
 		{name: "oversized success body", status: http.StatusOK, body: strings.Repeat("x", 4096), wantErr: true},
 	}
@@ -238,7 +242,7 @@ func TestAddressFactory_PublicIPFallback(t *testing.T) {
 
 	newCache := func() (*publicIPCache, *atomic.Int32) {
 		c, _, calls := newTestCache(func(context.Context) (string, error) {
-			return "203.0.113.7", nil
+			return testPublicIP, nil
 		})
 		c.get()
 		waitForRefresh(t, c)
@@ -294,8 +298,7 @@ func TestPublicIPCache_CloseCancelsLookupAndStopsRefreshing(t *testing.T) {
 
 	c.get()
 	<-started
-	c.close()
-	waitForRefresh(t, c)
+	c.close() // returns only after the refresh goroutine has exited
 
 	// No new lookups after close, even once the backoff has expired
 	clock.Advance(publicIPFailureBackoff)
@@ -305,4 +308,31 @@ func TestPublicIPCache_CloseCancelsLookupAndStopsRefreshing(t *testing.T) {
 	c.mu.Unlock()
 	assert.False(t, refreshing)
 	assert.Equal(t, int32(1), calls.Load())
+}
+
+func TestPublicIPCache_CloseDiscardsInFlightResult(t *testing.T) {
+	release := make(chan struct{})
+	started := make(chan struct{})
+	c, _, _ := newTestCache(func(context.Context) (string, error) {
+		close(started)
+		<-release // ignores cancellation, as a lookup finishing right at shutdown would
+		return testPublicIP, nil
+	})
+
+	c.get()
+	<-started
+	go func() {
+		// close() waits for the goroutine, so let the lookup complete after cancellation
+		time.Sleep(10 * time.Millisecond)
+		close(release)
+	}()
+	c.close()
+	assert.Empty(t, c.get())
+}
+
+func TestNewPublicIPCache_DefaultsToGetPublicIP(t *testing.T) {
+	c := newPublicIPCache(nil)
+	defer c.close()
+	assert.Equal(t, reflect.ValueOf(GetPublicIP).Pointer(), reflect.ValueOf(c.fetch).Pointer())
+	assert.Equal(t, "https://ifconfig.me/ip", publicIPURL)
 }
