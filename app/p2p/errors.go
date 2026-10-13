@@ -16,4 +16,5 @@ var (
 	ErrUnknownSyncMessageType   = errors.New("peer sent an unknown sync message type")
 	ErrPriorAlertMissing        = errors.New("alert preceding this sequence number is not stored")
 	ErrDuplicateAlert           = errors.New("alert with this sequence number is already stored")
+	ErrInvalidPrivateKeyFile    = errors.New("p2p private key file does not contain a valid private key")
 )

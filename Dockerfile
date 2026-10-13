@@ -12,8 +12,8 @@ RUN CGO_ENABLED=0 go build -a -o $APP_ROOT/src/go-alert-system github.com/bsv-bl
 # Copy the controller-manager into a thin image
 FROM registry.access.redhat.com/ubi9-minimal:9.8@sha256:5ed244b62bbf4095080144d9d35eb8fcd3d39a9801f94aadd63b9d10978a01ae
 WORKDIR /
-RUN mkdir /.bitcoin
-RUN touch /.bitcoin/alert_system_private_key
+# The p2p private key is generated here on first start; mount a volume at /.bitcoin to keep the peer ID across restarts
+RUN mkdir /.bitcoin && chown 65534:65534 /.bitcoin && chmod 700 /.bitcoin
 COPY --from=builder /opt/app-root/src/go-alert-system .
 USER 65534:65534
 ENV ALERT_SYSTEM_ENVIRONMENT=local
