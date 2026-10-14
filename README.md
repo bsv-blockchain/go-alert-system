@@ -120,9 +120,9 @@ This repository does not publish container images. Build one from the [Dockerfil
 docker build -t go-alert-system .
 ```
 
-The image has no default network. Set `ALERT_SYSTEM_ENVIRONMENT` (`mainnet`, `testnet` or `stn`), or mount a custom settings file and point `ALERT_SYSTEM_CONFIG_FILEPATH` at it; with neither, the container exits at startup. Running it as below uses an ephemeral database, which syncs up from the peers on the network on startup:
+The image has no default network. Set `ALERT_SYSTEM_ENVIRONMENT` (`mainnet`, `testnet` or `stn`), or mount a custom settings file and point `ALERT_SYSTEM_CONFIG_FILEPATH` at it; with neither, the container exits at startup. The datastore is created in `/data` and the p2p key in `/.bitcoin`; mount volumes there to keep them across restarts (without them the container syncs up from the peers on the network on every start):
 ```shell script
-docker run -e ALERT_SYSTEM_ENVIRONMENT=testnet --expose 9906 go-alert-system
+docker run -e ALERT_SYSTEM_ENVIRONMENT=testnet -v alert-data:/data -v alert-p2p:/.bitcoin --expose 9906 go-alert-system
 ```
 
 The `local` and `test` environments trust development keys whose private keys are public, so the alert system refuses to start with them unless the node it connects to is on `regtest`.

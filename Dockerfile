@@ -15,5 +15,8 @@ WORKDIR /
 # The p2p private key is generated here on first start; mount a volume at /.bitcoin to keep the peer ID across restarts
 RUN mkdir /.bitcoin && chown 65534:65534 /.bitcoin && chmod 700 /.bitcoin
 COPY --from=builder /opt/app-root/src/go-alert-system .
+# The datastore is created in the working directory; mount a volume at /data to keep it across restarts
+RUN mkdir /data && chown 65534:65534 /data && chmod 700 /data
+WORKDIR /data
 USER 65534:65534
 CMD ["/go-alert-system"]

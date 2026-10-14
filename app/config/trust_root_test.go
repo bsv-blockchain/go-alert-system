@@ -44,3 +44,27 @@ func TestValidateTrustRoot(t *testing.T) {
 		})
 	}
 }
+
+// TestHasDevelopmentKeys covers detecting development genesis keys
+func TestHasDevelopmentKeys(t *testing.T) {
+	local, err := NetworkDefaults(EnvironmentLocal)
+	require.NoError(t, err)
+	mainnet, err := NetworkDefaults(EnvironmentMainnet)
+	require.NoError(t, err)
+
+	has, err := HasDevelopmentKeys(local.GenesisKeys)
+	require.NoError(t, err)
+	require.True(t, has)
+
+	has, err = HasDevelopmentKeys(append(append([]string{}, mainnet.GenesisKeys...), strings.ToUpper(local.GenesisKeys[4])))
+	require.NoError(t, err)
+	require.True(t, has)
+
+	has, err = HasDevelopmentKeys(mainnet.GenesisKeys)
+	require.NoError(t, err)
+	require.False(t, has)
+
+	has, err = HasDevelopmentKeys(nil)
+	require.NoError(t, err)
+	require.False(t, has)
+}

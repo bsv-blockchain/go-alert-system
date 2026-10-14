@@ -12,27 +12,52 @@ const ChainRegtest = "regtest"
 // their private keys are public, so anyone can sign alerts for them
 var devEnvironments = []string{EnvironmentLocal, EnvironmentTest}
 
-// ValidateTrustRoot refuses a trust root of development genesis keys on any chain other
-// than regtest. chain is the chain name reported by the node (getblockchaininfo).
-// Every configured key is checked, so a custom config file that copies the development
-// keys is caught as well as the local and test environments.
-func ValidateTrustRoot(genesisKeys []string, chain string) error {
-	if chain == ChainRegtest {
-		return nil
-	}
-
+// developmentKey returns the environment a key is a development genesis key of, or "" if it is not one
+func developmentKey(key string) (string, error) {
 	for _, env := range devEnvironments {
 		network, err := NetworkDefaults(env)
 		if err != nil {
-			return err
+			return "", err
 		}
 		for _, devKey := range network.GenesisKeys {
-			for _, key := range genesisKeys {
-				if strings.EqualFold(key, devKey) {
-					return fmt.Errorf("%w: genesis key %s is a development key from the %q environment, but the node is on chain %q",
-						ErrDevelopmentKeysOnPublicChain, key, env, chain)
-				}
+			if strings.EqualFold(key, devKey) {
+				return env, nil
 			}
+		}
+	}
+	return "", nil
+}
+
+// HasDevelopmentKeys reports whether any of the keys is a development genesis key
+func HasDevelopmentKeys(keys []string) (bool, error) {
+	for _, key := range keys {
+		env, err := developmentKey(key)
+		if err != nil {
+			return false, err
+		}
+		if len(env) > 0 {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// ValidateTrustRoot refuses development genesis keys on any chain other than regtest.
+// chain is the chain name reported by the node (getblockchaininfo). Every key is checked,
+// so a custom config file or a persisted datastore that holds the development keys is
+// caught as well as the local and test environments.
+func ValidateTrustRoot(keys []string, chain string) error {
+	if chain == ChainRegtest {
+		return nil
+	}
+	for _, key := range keys {
+		env, err := developmentKey(key)
+		if err != nil {
+			return err
+		}
+		if len(env) > 0 {
+			return fmt.Errorf("%w: key %s is a development key from the %q environment, but the node is on chain %q",
+				ErrDevelopmentKeysOnPublicChain, key, env, chain)
 		}
 	}
 	return nil

@@ -17,7 +17,7 @@ type Node struct {
 	// Functions
 	BanPeerFunc                               func(ctx context.Context, peer string) error
 	BestBlockHashFunc                         func(ctx context.Context) (string, error)
-	ChainInfoFunc                             func(ctx context.Context) (*models.ChainInfo, error)
+	ChainFunc                                 func(ctx context.Context) (string, error)
 	InvalidateBlockFunc                       func(ctx context.Context, hash string) error
 	UnbanPeerFunc                             func(ctx context.Context, peer string) error
 	AddToConsensusBlacklistFunc               func(ctx context.Context, funds []models.Fund) (*models.AddToConsensusBlacklistResponse, error)
@@ -57,12 +57,12 @@ func (n *Node) BestBlockHash(ctx context.Context) (string, error) {
 	return "", nil
 }
 
-// ChainInfo will call the ChainInfoFunc
-func (n *Node) ChainInfo(ctx context.Context) (*models.ChainInfo, error) {
-	if n.ChainInfoFunc != nil {
-		return n.ChainInfoFunc(ctx)
+// Chain will call the ChainFunc
+func (n *Node) Chain(ctx context.Context) (string, error) {
+	if n.ChainFunc != nil {
+		return n.ChainFunc(ctx)
 	}
-	return &models.ChainInfo{}, nil
+	return "", nil
 }
 
 // InvalidateBlock will call the InvalidateBlockFunc if not nil, otherwise return nil

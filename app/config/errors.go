@@ -19,6 +19,7 @@ var (
 	ErrInvalidGenesisKey            = errors.New("genesis key is not a valid compressed public key")
 	ErrDuplicateGenesisKey          = errors.New("genesis key is listed more than once")
 	ErrDevelopmentKeysOnPublicChain = errors.New("development genesis keys are only allowed on regtest")
+	ErrUnexpectedRPCResponse        = errors.New("unexpected rpc response")
 	ErrRPCUserMissingFromConfig     = errors.New("rpcuser missing from bitcoin.conf file")
 	ErrRPCPasswordMissingFromConfig = errors.New("rpcpassword missing from bitcoin.conf file")
 	ErrUnexpectedPeerAddress        = errors.New("unexpected peer address")

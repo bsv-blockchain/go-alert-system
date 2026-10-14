@@ -25,30 +25,32 @@ func main() {
 		_appConfig.CloseAll(context.Background())
 	}()
 
+	// Check the RPC connection (unless disabled) and refuse development genesis keys outside regtest
+	// before they are stored. The chain is always checked when development keys are configured,
+	// even with RPC verification disabled, since nothing else stops them being trusted.
+	ctx := context.Background()
+	trustRoot := &trustRootCheck{node: _appConfig.Services.Node}
+	if err = trustRoot.verify(ctx, _appConfig.GenesisKeys, !_appConfig.DisableRPCVerification); err != nil {
+		_appConfig.Services.Log.Fatalf("refusing to start: %s", err.Error())
+	}
+
 	// Ensure we have the genesis alert in the database
-	if err = models.CreateGenesisAlert(
-		context.Background(), model.WithAllDependencies(_appConfig),
-	); err != nil {
+	if err = models.CreateGenesisAlert(ctx, model.WithAllDependencies(_appConfig)); err != nil {
 		_appConfig.Services.Log.Fatalf("error creating genesis alert: %s", err.Error())
 	}
 
-	// Ensure that RPC connection is valid
-	if !_appConfig.DisableRPCVerification {
-		if _, err = _appConfig.Services.Node.BestBlockHash(context.Background()); err != nil {
-			_appConfig.Services.Log.Errorf("error talking to Bitcoin node with supplied RPC credentials: %s", err.Error())
-			return
-		}
-
-		// Refuse to trust development genesis keys (their private keys are public) outside regtest
-		chainInfo, chainErr := _appConfig.Services.Node.ChainInfo(context.Background())
-		if chainErr != nil {
-			_appConfig.Services.Log.Errorf("error getting chain info from Bitcoin node: %s", chainErr.Error())
-			return
-		}
-		if err = config.ValidateTrustRoot(_appConfig.GenesisKeys, chainInfo.Chain); err != nil {
-			_appConfig.Services.Log.Errorf("refusing to start: %s", err.Error())
-			return
-		}
+	// The active keys in the datastore are the trust root, and a persisted datastore can hold
+	// keys from an earlier configuration, so check them too
+	var activeKeys []*models.PublicKey
+	if activeKeys, err = models.GetActivePublicKey(ctx, nil, model.WithAllDependencies(_appConfig)); err != nil {
+		_appConfig.Services.Log.Fatalf("error getting the active public keys: %s", err.Error())
+	}
+	keys := make([]string, 0, len(activeKeys))
+	for _, key := range activeKeys {
+		keys = append(keys, key.Key)
+	}
+	if err = trustRoot.verify(ctx, keys, false); err != nil {
+		_appConfig.Services.Log.Fatalf("refusing to start: active key set in the datastore: %s", err.Error())
 	}
 
 	// Create the p2p server

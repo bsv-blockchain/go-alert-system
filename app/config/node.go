@@ -2,6 +2,10 @@ package config
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"strings"
 
 	"github.com/bsv-blockchain/go-bn"
 	"github.com/bsv-blockchain/go-bn/models"
@@ -13,7 +17,7 @@ import (
 type NodeInterface interface {
 	BanPeer(ctx context.Context, peer string) error
 	BestBlockHash(ctx context.Context) (string, error)
-	ChainInfo(ctx context.Context) (*models.ChainInfo, error)
+	Chain(ctx context.Context) (string, error)
 	GetRPCHost() string
 	GetRPCPassword() string
 	GetRPCUser() string
@@ -74,10 +78,46 @@ func (n *Node) BestBlockHash(ctx context.Context) (string, error) {
 	return c.BestBlockHash(ctx)
 }
 
-// ChainInfo gets information about the node's chain (getblockchaininfo)
-func (n *Node) ChainInfo(ctx context.Context) (*models.ChainInfo, error) {
-	c := bn.NewNodeClient(bn.WithCreds(n.RPCUser, n.RPCPassword), bn.WithHost(n.RPCHost))
-	return c.ChainInfo(ctx)
+// Chain gets the name of the node's chain from getblockchaininfo ("main", "test", "stn" or "regtest").
+// The response is decoded here rather than through go-bn, whose ChainInfo model cannot decode
+// the fractional verificationprogress a real node reports.
+func (n *Node) Chain(ctx context.Context) (string, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, n.RPCHost, strings.NewReader(
+		`{"jsonrpc":"1.0","id":"go-alert-system","method":"getblockchaininfo","params":[]}`,
+	))
+	if err != nil {
+		return "", err
+	}
+	req.SetBasicAuth(n.RPCUser, n.RPCPassword)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+
+	var result struct {
+		Result *struct {
+			Chain string `json:"chain"`
+		} `json:"result"`
+		Error *struct {
+			Code    int    `json:"code"`
+			Message string `json:"message"`
+		} `json:"error"`
+	}
+	if err = json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", fmt.Errorf("%w: getblockchaininfo: HTTP %d: %s", ErrUnexpectedRPCResponse, resp.StatusCode, err.Error())
+	}
+	if result.Error != nil {
+		return "", fmt.Errorf("%w: getblockchaininfo: %d %s", ErrUnexpectedRPCResponse, result.Error.Code, result.Error.Message)
+	}
+	if result.Result == nil || len(result.Result.Chain) == 0 {
+		return "", fmt.Errorf("%w: getblockchaininfo: no chain in response", ErrUnexpectedRPCResponse)
+	}
+	return result.Result.Chain, nil
 }
 
 // UnbanPeer unbans a peer
