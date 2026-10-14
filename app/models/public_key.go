@@ -5,7 +5,6 @@ import (
 
 	"github.com/mrz1836/go-datastore"
 
-	"github.com/bsv-blockchain/go-alert-system/app/config"
 	"github.com/bsv-blockchain/go-alert-system/app/models/model"
 	"github.com/bsv-blockchain/go-alert-system/utils"
 )
@@ -66,20 +65,32 @@ func (m *PublicKey) Save(ctx context.Context) error {
 
 // GetActivePublicKey will get the active public key
 func GetActivePublicKey(ctx context.Context, metadata *model.Metadata, opts ...model.Options) ([]*PublicKey, error) {
+	return getActivePublicKeys(ctx, metadata, &datastore.QueryParams{
+		Page:          1,
+		PageSize:      10,
+		OrderByField:  utils.FieldID,
+		SortDirection: utils.SortAscending,
+	}, opts...)
+}
+
+// getAllActivePublicKeys will get every active public key, without a page limit
+func getAllActivePublicKeys(ctx context.Context, opts ...model.Options) ([]*PublicKey, error) {
+	return getActivePublicKeys(ctx, nil, &datastore.QueryParams{
+		OrderByField:  utils.FieldID,
+		SortDirection: utils.SortAscending,
+	}, opts...)
+}
+
+// getActivePublicKeys will get the active public keys using the given query params
+func getActivePublicKeys(ctx context.Context, metadata *model.Metadata, queryParams *datastore.QueryParams,
+	opts ...model.Options,
+) ([]*PublicKey, error) {
 	// Set the conditions
 	conditions := &map[string]interface{}{
 		utils.FieldActive: true, // Active flag is true
 		utils.FieldDeletedAt: map[string]interface{}{ // IS NULL
 			utils.ExistsCondition: false,
 		},
-	}
-
-	// Set the query params
-	queryParams := &datastore.QueryParams{
-		Page:          1,
-		PageSize:      10,
-		OrderByField:  utils.FieldID,
-		SortDirection: utils.SortAscending,
 	}
 
 	// Get the records
@@ -94,11 +105,10 @@ func GetActivePublicKey(ctx context.Context, metadata *model.Metadata, opts ...m
 }
 
 // ClearActivePublicKeys will clear the active public keys
-// todo this needs to be refactored to use model update/save
 func ClearActivePublicKeys(_ context.Context, ds datastore.ClientInterface) error {
 	// Execute the query
 	tx := ds.Execute("").Exec(
-		"UPDATE "+config.DatabasePrefix+"_"+model.TablePublicKeys+" SET "+utils.FieldActive+" = ?",
+		"UPDATE "+ds.GetTableName(model.TablePublicKeys)+" SET "+utils.FieldActive+" = ?",
 		false,
 	).Begin()
 

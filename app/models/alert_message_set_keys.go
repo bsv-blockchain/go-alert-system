@@ -63,29 +63,61 @@ func (a *AlertMessageSetKeys) Read(alert []byte) error {
 	return nil
 }
 
-// Do execute the alert
+// Do execute the alert: deactivate the current key set and activate the new one
+// in a single transaction, so a failure leaves the current key set untouched
 func (a *AlertMessageSetKeys) Do(ctx context.Context) error {
-	err := ClearActivePublicKeys(ctx, a.Config().Services.Datastore)
+	opts := model.WithAllDependencies(a.Config())
+
+	// Read everything before opening the write transaction (SQLite locks
+	// reads from other connections while a write transaction is open)
+	active, err := getAllActivePublicKeys(ctx, opts)
 	if err != nil {
 		return err
 	}
+
+	// One model per row: the current keys, deactivated unless they are in the new set
+	rows := make(map[string]*PublicKey, len(active)+len(a.Keys))
+	toSave := make([]*PublicKey, 0, len(active)+len(a.Keys))
+	for _, pk := range active {
+		pk.SetOptions(opts)
+		pk.Active = false
+		rows[pk.Key] = pk
+		toSave = append(toSave, pk)
+	}
+
+	// The new keys, reusing an existing row for a key that was seen before
 	for _, key := range a.Keys {
-		pk := NewPublicKey(model.WithAllDependencies(a.Config()))
-		conditions := map[string]interface{}{
-			"key": hex.EncodeToString(key[:]),
+		keyHex := hex.EncodeToString(key[:])
+		pk, ok := rows[keyHex]
+		if !ok {
+			pk = NewPublicKey(opts)
+			err = model.Get(ctx, pk, map[string]interface{}{"key": keyHex}, 5*time.Second, false)
+			if errors.Is(err, datastore.ErrNoResults) {
+				pk = NewPublicKey(opts, model.New())
+			} else if err != nil {
+				return err
+			}
+			rows[keyHex] = pk
+			toSave = append(toSave, pk)
 		}
-		err := model.Get(ctx, pk, conditions, 5*time.Second, false)
-		if !errors.Is(err, datastore.ErrNoResults) && err != nil {
-			return err
-		}
-		pk.Key = hex.EncodeToString(key[:])
+		pk.Key = keyHex
 		pk.Active = true
 		pk.LastUpdateHash = a.Hash
-		if err = pk.Save(ctx); err != nil {
-			return err
-		}
 	}
-	return nil
+
+	// Write every change in one transaction
+	return a.Config().Services.Datastore.NewTx(ctx, func(tx *datastore.Transaction) error {
+		saved := make([]model.BaseInterface, 0, len(toSave))
+		for _, pk := range toSave {
+			models, saveErr := pk.BeginSaveWithTx(ctx, tx)
+			if saveErr != nil {
+				_ = tx.Rollback()
+				return saveErr
+			}
+			saved = append(saved, models...)
+		}
+		return model.CompleteSaveWithTx(ctx, tx, saved)
+	})
 }
 
 // ToJSON is the alert in JSON format
