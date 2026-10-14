@@ -22,6 +22,9 @@ spec:
         - image: docker.io/galtbv/alert-system:stn
           imagePullPolicy: Always
           name: alert-system
+          env:
+            - name: ALERT_SYSTEM_ENVIRONMENT
+              value: stn
           ports:
             - containerPort: 9906
           resources: {}

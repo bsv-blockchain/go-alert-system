@@ -16,5 +16,4 @@ WORKDIR /
 RUN mkdir /.bitcoin && chown 65534:65534 /.bitcoin && chmod 700 /.bitcoin
 COPY --from=builder /opt/app-root/src/go-alert-system .
 USER 65534:65534
-ENV ALERT_SYSTEM_ENVIRONMENT=local
 CMD ["/go-alert-system"]

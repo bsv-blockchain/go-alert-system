@@ -13,6 +13,7 @@ import (
 type NodeInterface interface {
 	BanPeer(ctx context.Context, peer string) error
 	BestBlockHash(ctx context.Context) (string, error)
+	ChainInfo(ctx context.Context) (*models.ChainInfo, error)
 	GetRPCHost() string
 	GetRPCPassword() string
 	GetRPCUser() string
@@ -71,6 +72,12 @@ func (n *Node) BanPeer(ctx context.Context, peer string) error {
 func (n *Node) BestBlockHash(ctx context.Context) (string, error) {
 	c := bn.NewNodeClient(bn.WithCreds(n.RPCUser, n.RPCPassword), bn.WithHost(n.RPCHost))
 	return c.BestBlockHash(ctx)
+}
+
+// ChainInfo gets information about the node's chain (getblockchaininfo)
+func (n *Node) ChainInfo(ctx context.Context) (*models.ChainInfo, error) {
+	c := bn.NewNodeClient(bn.WithCreds(n.RPCUser, n.RPCPassword), bn.WithHost(n.RPCHost))
+	return c.ChainInfo(ctx)
 }
 
 // UnbanPeer unbans a peer

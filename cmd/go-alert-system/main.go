@@ -38,6 +38,17 @@ func main() {
 			_appConfig.Services.Log.Errorf("error talking to Bitcoin node with supplied RPC credentials: %s", err.Error())
 			return
 		}
+
+		// Refuse to trust development genesis keys (their private keys are public) outside regtest
+		chainInfo, chainErr := _appConfig.Services.Node.ChainInfo(context.Background())
+		if chainErr != nil {
+			_appConfig.Services.Log.Errorf("error getting chain info from Bitcoin node: %s", chainErr.Error())
+			return
+		}
+		if err = config.ValidateTrustRoot(_appConfig.GenesisKeys, chainInfo.Chain); err != nil {
+			_appConfig.Services.Log.Errorf("refusing to start: %s", err.Error())
+			return
+		}
 	}
 
 	// Create the p2p server

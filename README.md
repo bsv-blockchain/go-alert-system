@@ -115,11 +115,17 @@ Configuration files can be found in the [config](app/config/envs) directory.
 <br/>
 
 ### Container Environment
-**Note:** to use a custom settings file, it needs to be mounted and the appropriate environment variables set. Running it as below will run an ephemeral database but the container should sync up from the peers on the network on startup.
-### podman
+This repository does not publish container images. Build one from the [Dockerfile](Dockerfile):
+```shell script
+docker build -t go-alert-system .
 ```
-$ podman run -u root -e ALERT_SYSTEM_ENVIRONMENT=testnet  --expose 9906 docker.io/bsvb/alert-key:latest
+
+The image has no default network. Set `ALERT_SYSTEM_ENVIRONMENT` (`mainnet`, `testnet` or `stn`), or mount a custom settings file and point `ALERT_SYSTEM_CONFIG_FILEPATH` at it; with neither, the container exits at startup. Running it as below uses an ephemeral database, which syncs up from the peers on the network on startup:
+```shell script
+docker run -e ALERT_SYSTEM_ENVIRONMENT=testnet --expose 9906 go-alert-system
 ```
+
+The `local` and `test` environments trust development keys whose private keys are public, so the alert system refuses to start with them unless the node it connects to is on `regtest`.
 
 <br/>
 
