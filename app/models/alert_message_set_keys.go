@@ -68,8 +68,7 @@ func (a *AlertMessageSetKeys) Read(alert []byte) error {
 func (a *AlertMessageSetKeys) Do(ctx context.Context) error {
 	opts := model.WithAllDependencies(a.Config())
 
-	// Read everything before opening the write transaction (SQLite locks
-	// reads from other connections while a write transaction is open)
+	// Read everything first: a datastore transaction only supports writes
 	active, err := getAllActivePublicKeys(ctx, opts)
 	if err != nil {
 		return err

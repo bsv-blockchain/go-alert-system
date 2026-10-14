@@ -81,9 +81,12 @@ func rotate(t *testing.T, deps *config.Config, pubs []string) error {
 	return a.Do(context.Background())
 }
 
-// requireExactly asserts that the active key set is exactly the given keys
+// requireExactly asserts that the active key set is exactly the given keys, one active row per key
 func requireExactly(t *testing.T, deps *config.Config, want []string) {
 	t.Helper()
+	rows, err := getAllActivePublicKeys(context.Background(), model.WithAllDependencies(deps))
+	require.NoError(t, err)
+	require.Len(t, rows, len(want), "active rows")
 	got := activeKeys(t, deps)
 	require.Len(t, got, len(want))
 	for _, k := range want {
@@ -126,6 +129,30 @@ func TestAlertMessageSetKeys_Do_Idempotent(t *testing.T) {
 
 	newKeys := newPubKeys(t, 5)
 	require.NoError(t, rotate(t, deps, newKeys))
+	require.NoError(t, rotate(t, deps, newKeys))
+	requireExactly(t, deps, newKeys)
+}
+
+// TestAlertMessageSetKeys_Do_RollsBack checks a failure part way through a rotation leaves
+// the current key set active: the deactivation of the old keys is rolled back with it
+func TestAlertMessageSetKeys_Do_RollsBack(t *testing.T) {
+	deps := loadWithTablePrefix(t, "alert_system_mainnet")
+	ds := deps.Services.Datastore
+	newKeys := newPubKeys(t, 5)
+
+	// Make inserting the last new key fail, after the old keys were deactivated in the transaction
+	table := ds.GetTableName(model.TablePublicKeys)
+	require.NoError(t, ds.Execute("").Exec(
+		"CREATE TRIGGER fail_insert BEFORE INSERT ON "+table+
+			" WHEN NEW.key = '"+newKeys[4]+"' BEGIN SELECT RAISE(ABORT, 'injected failure'); END",
+	).Error)
+
+	err := rotate(t, deps, newKeys)
+	require.ErrorContains(t, err, "injected failure")
+	requireExactly(t, deps, deps.GenesisKeys)
+
+	// Once the failure clears, the retry applies the rotation
+	require.NoError(t, ds.Execute("").Exec("DROP TRIGGER fail_insert").Error)
 	require.NoError(t, rotate(t, deps, newKeys))
 	requireExactly(t, deps, newKeys)
 }

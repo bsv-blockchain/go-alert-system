@@ -105,6 +105,9 @@ func getActivePublicKeys(ctx context.Context, metadata *model.Metadata, queryPar
 }
 
 // ClearActivePublicKeys will clear the active public keys
+//
+// Deprecated: the deactivation is not part of any transaction. A set keys alert
+// replaces the key set atomically through AlertMessageSetKeys.Do instead.
 func ClearActivePublicKeys(_ context.Context, ds datastore.ClientInterface) error {
 	// Execute the query
 	tx := ds.Execute("").Exec(
