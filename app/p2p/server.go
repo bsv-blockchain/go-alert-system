@@ -42,6 +42,9 @@ import (
 type ServerOptions struct {
 	Config     *config.Config
 	TopicNames []string
+
+	// publicIPFetch overrides the public IP lookup (tests only; GetPublicIP when nil)
+	publicIPFetch func(ctx context.Context) (string, error)
 }
 
 // Server is the P2P server
@@ -52,6 +55,7 @@ type Server struct {
 	host                          host.Host
 	privateKey                    *crypto.PrivKey
 	reachabilitySub               event.Subscription
+	publicIP                      *publicIPCache
 	subscriptions                 map[string]*pubsub.Subscription
 	topicNames                    []string
 	topics                        map[string]*pubsub.Topic
@@ -94,7 +98,7 @@ func NewServer(o ServerOptions) (*Server, error) {
 	}
 
 	// The public IP fallback is resolved in the background and cached, never on the address factory's hot path
-	publicIP := newPublicIPCache()
+	publicIP := newPublicIPCache(o.publicIPFetch)
 
 	// Latest AutoNAT reachability, updated from the host event bus once the host is created
 	reachability := new(atomic.Int32)
@@ -139,14 +143,20 @@ func NewServer(o ServerOptions) (*Server, error) {
 		libp2p.EnableHolePunching(),
 		libp2p.AddrsFactory(addressFactory),
 		libp2p.ConnectionGater(ipFilter),
-		libp2p.EnableNATService(), // answer AutoNAT dial-back probes so peers can learn their reachability
 	); err != nil {
+		publicIP.close()
 		return nil, err
 	}
 
-	// Track reachability so the address factory stops advertising a guessed IP once we're known to be private
+	// Track reachability so the address factory stops advertising a guessed IP once we're known to be private.
+	// Reachability comes from the AutoNAT v1 client, which relies on dial-back probes from peers running the
+	// AutoNAT service. Publicly reachable Kubo nodes on the IPFS DHT we join (see initDHT) provide this by
+	// default, so alert nodes don't run the service themselves. With no such peer connected, the client can't probe
+	// and reachability keeps its last value: Unknown on a fresh node (the cached guessed IP is advertised), or
+	// whatever was last observed. Kubo plans to remove AutoNAT v1, at which point this should move to v2.
 	reachabilitySub, err := h.EventBus().Subscribe(new(event.EvtLocalReachabilityChanged))
 	if err != nil {
+		publicIP.close()
 		_ = h.Close()
 		return nil, err
 	}
@@ -172,6 +182,7 @@ func NewServer(o ServerOptions) (*Server, error) {
 		topicNames:                    o.TopicNames,
 		privateKey:                    pk,
 		reachabilitySub:               reachabilitySub,
+		publicIP:                      publicIP,
 		config:                        o.Config,
 		quitPeerInitializationChannel: make(chan bool, 1),
 	}, nil
@@ -357,12 +368,8 @@ func (s *Server) Stop(_ context.Context) error {
 
 	s.config.Services.Log.Debugf("removing stream handler to stop allowing connections")
 	s.host.RemoveStreamHandler(protocol.ID(s.config.P2P.AlertSystemProtocolID))
-	if s.reachabilitySub != nil {
-		_ = s.reachabilitySub.Close()
-	}
 	s.config.Services.Log.Debugf("shutting down libp2p host")
-	err := s.host.Close()
-	if err != nil {
+	if err := s.closeHostResources(); err != nil {
 		return err
 	}
 	s.config.Services.Log.Debugf("shutting down dht") // this is maybe redundant
@@ -545,6 +552,18 @@ func (s *Server) Subscribe(ctx context.Context, subscriber *pubsub.Subscription,
 			)
 		}
 	}
+}
+
+// closeHostResources releases everything NewServer created: the public IP lookup, the reachability
+// subscription (host.Close doesn't close event bus subscriptions) and the libp2p host
+func (s *Server) closeHostResources() error {
+	if s.publicIP != nil {
+		s.publicIP.close()
+	}
+	if s.reachabilitySub != nil {
+		_ = s.reachabilitySub.Close()
+	}
+	return s.host.Close()
 }
 
 // handleAlert validates an alert received over pubsub, then stores and executes it.

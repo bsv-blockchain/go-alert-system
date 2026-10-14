@@ -1,6 +1,7 @@
 package p2p
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"os"
@@ -129,10 +130,14 @@ func TestNewServer_PrivateKeyPathStableAcrossRestarts(t *testing.T) {
 	deps.P2P.Port = "0"
 
 	start := func() peer.ID {
-		s, err := NewServer(ServerOptions{Config: deps})
+		s, err := NewServer(ServerOptions{
+			Config: deps,
+			// Never hit ifconfig.me from tests
+			publicIPFetch: func(context.Context) (string, error) { return "", errLookupFailed },
+		})
 		require.NoError(t, err)
 		id := s.host.ID()
-		require.NoError(t, s.host.Close())
+		require.NoError(t, s.closeHostResources())
 		return id
 	}
 

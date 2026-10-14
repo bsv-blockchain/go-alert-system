@@ -36,8 +36,8 @@ var ErrInvalidPublicIP = errors.New("public ip lookup returned an invalid ipv4 a
 // ErrPublicIPLookupStatus is returned when the lookup service responds with a non-2xx status
 var ErrPublicIPLookupStatus = errors.New("public ip lookup failed")
 
-// publicIPURL is the lookup endpoint (a var so tests can point it at a local server)
-var publicIPURL = "https://ifconfig.me/ip" //nolint:gochecknoglobals // overridden in tests
+// publicIPURL is the lookup endpoint
+const publicIPURL = "https://ifconfig.me/ip"
 
 // publicIPClient is shared across lookups so connections are reused instead of leaked
 var publicIPClient = &http.Client{ //nolint:gochecknoglobals // shared client, created once
@@ -55,7 +55,12 @@ var publicIPClient = &http.Client{ //nolint:gochecknoglobals // shared client, c
 
 // GetPublicIP fetches the public IPv4 address from ifconfig.me
 func GetPublicIP(ctx context.Context) (string, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, publicIPURL, nil)
+	return getPublicIPFrom(ctx, publicIPURL)
+}
+
+// getPublicIPFrom fetches the public IPv4 address from the given lookup endpoint
+func getPublicIPFrom(ctx context.Context, url string) (string, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return "", err
 	}
@@ -95,15 +100,26 @@ type publicIPCache struct {
 	expires    time.Time
 	refreshing bool
 
+	// ctx is cancelled by close() to abort an in-flight lookup and stop further refreshes
+	ctx    context.Context //nolint:containedctx // lifetime of the cache, cancelled by close()
+	cancel context.CancelFunc
+	wg     sync.WaitGroup
+
 	fetch func(ctx context.Context) (string, error)
 	now   func() time.Time
 }
 
-// newPublicIPCache creates a cache backed by GetPublicIP
-func newPublicIPCache() *publicIPCache {
+// newPublicIPCache creates a cache backed by fetch (GetPublicIP when nil)
+func newPublicIPCache(fetch func(ctx context.Context) (string, error)) *publicIPCache {
+	if fetch == nil {
+		fetch = GetPublicIP
+	}
+	ctx, cancel := context.WithCancel(context.Background())
 	return &publicIPCache{
-		fetch: GetPublicIP,
-		now:   time.Now,
+		ctx:    ctx,
+		cancel: cancel,
+		fetch:  fetch,
+		now:    time.Now,
 	}
 }
 
@@ -113,16 +129,26 @@ func (c *publicIPCache) get() string {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	if !c.refreshing && !c.now().Before(c.expires) {
+	if c.ctx.Err() == nil && !c.refreshing && !c.now().Before(c.expires) {
 		c.refreshing = true
+		c.wg.Add(1)
 		go c.refresh()
 	}
 	return c.ip
 }
 
+// close cancels any in-flight lookup, stops further refreshes and waits for the refresh goroutine to exit
+func (c *publicIPCache) close() {
+	c.mu.Lock()
+	c.cancel()
+	c.mu.Unlock()
+	c.wg.Wait()
+}
+
 // refresh performs one lookup and records the result
 func (c *publicIPCache) refresh() {
-	ctx, cancel := context.WithTimeout(context.Background(), publicIPRequestTimeout)
+	defer c.wg.Done()
+	ctx, cancel := context.WithTimeout(c.ctx, publicIPRequestTimeout)
 	defer cancel()
 
 	ip, err := c.fetch(ctx)
@@ -130,6 +156,10 @@ func (c *publicIPCache) refresh() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.refreshing = false
+	if c.ctx.Err() != nil {
+		// Closed while the lookup was in flight; don't record anything
+		return
+	}
 	if err != nil {
 		// Keep the last known IP, but back off before trying again
 		c.expires = c.now().Add(publicIPFailureBackoff)
