@@ -5,7 +5,7 @@ import (
 
 	"github.com/bitcoinschema/go-bitcoin"
 
-	"github.com/bsv-blockchain/go-alert-system/utils"
+	"github.com/bsv-blockchain/go-alert-system/internal/testkeys"
 )
 
 // setKeysPayload builds a 165 byte set keys payload from the given compressed public keys (hex)
@@ -22,7 +22,7 @@ func (ts *TestSuite) setKeysPayload(pubKeys ...string) []byte {
 // testPubKeys returns the compressed public keys for the test private keys
 func (ts *TestSuite) testPubKeys() []string {
 	pubs := make([]string, 0, 5)
-	for _, priv := range []string{utils.Key1, utils.Key2, utils.Key3, utils.Key4, utils.Key5} {
+	for _, priv := range []string{testkeys.Key1, testkeys.Key2, testkeys.Key3, testkeys.Key4, testkeys.Key5} {
 		pub, err := bitcoin.PubKeyFromPrivateKeyString(priv, true)
 		ts.Require().NoError(err)
 		pubs = append(pubs, pub)
