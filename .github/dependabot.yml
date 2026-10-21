@@ -132,28 +132,3 @@ updates:
       include: "scope"
     cooldown:
       default-days: 3
-
-  # ──────────────────────────────────────────────────────────────
-  # 5. Docker Compose (docker-compose.yml service images)
-  # ──────────────────────────────────────────────────────────────
-  - package-ecosystem: "docker-compose"
-    directory: "/"
-    target-branch: "master"
-    schedule:
-      interval: "weekly"
-      day: "tuesday"
-      time: "12:00"
-      timezone: "America/New_York"
-    allow:
-      - dependency-type: "direct"
-    groups:
-      docker-compose-all:
-        patterns: ["*"]
-    open-pull-requests-limit: 5
-    assignees: ["mrz1836"]
-    labels: ["chore", "dependencies", "docker-compose"]
-    commit-message:
-      prefix: "chore"
-      include: "scope"
-    cooldown:
-      default-days: 3
