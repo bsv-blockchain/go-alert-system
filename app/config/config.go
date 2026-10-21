@@ -43,10 +43,15 @@ var (
 // the uint64 frame-size guard without an explicit conversion.
 const DefaultP2PMaxMessageSizeBytes = 2 * 1024 * 1024
 
+// DatabasePrefix is the default database prefix
+//
+// Deprecated: tables are named from the configured datastore table_prefix; use the
+// datastore client's GetTableName instead of building names from this constant.
+var DatabasePrefix = "alert_system"
+
 // Application configuration constants
 var (
 	ApplicationName                = "alert_system"                // Application name used in places where we need an application name space
-	DatabasePrefix                 = "alert_system"                // Default database prefix
 	DefaultAlertSystemProtocolID   = "/bitcoin/alert-system/0.0.1" // Default alert system protocol for libp2p syncing
 	DefaultTopicName               = "alert_system"                // Default alert system topic name for libp2p subscription
 	DefaultServerShutdown          = 5 * time.Second               // Default server shutdown delay time (to finish any requests or internal processes)
