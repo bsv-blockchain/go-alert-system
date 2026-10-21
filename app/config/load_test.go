@@ -143,6 +143,34 @@ func TestLoadConfigFile(t *testing.T) {
 		defer c.CloseAll(context.Background())
 	})
 
+	t.Run("custom config file without an environment", func(t *testing.T) {
+		t.Setenv(EnvironmentKey, "")
+		t.Setenv(EnvironmentCustomFilePath, "envs/test.json")
+
+		ac, err := LoadConfigFile()
+		require.NoError(t, err)
+		require.NotNil(t, ac)
+		assert.Equal(t, "alert_system", ac.Datastore.TablePrefix)
+	})
+
+	t.Run("custom config file with an invalid environment", func(t *testing.T) {
+		t.Setenv(EnvironmentKey, "not-an-environment")
+		t.Setenv(EnvironmentCustomFilePath, "envs/test.json")
+
+		ac, err := LoadConfigFile()
+		require.ErrorIs(t, err, ErrInvalidEnvironment)
+		require.Nil(t, ac)
+	})
+
+	t.Run("neither an environment nor a custom config file", func(t *testing.T) {
+		t.Setenv(EnvironmentKey, "")
+		t.Setenv(EnvironmentCustomFilePath, "")
+
+		ac, err := LoadConfigFile()
+		require.ErrorIs(t, err, ErrInvalidEnvironment)
+		require.Nil(t, ac)
+	})
+
 	t.Run("test env, found file, test all structs", func(t *testing.T) {
 		err := os.Setenv(EnvironmentKey, EnvironmentTest)
 		require.NoError(t, err)
