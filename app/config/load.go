@@ -186,8 +186,11 @@ func LoadConfigFile() (_appConfig *Config, err error) {
 	}
 
 	// Check the environment we are running
+	// A custom config file carries its own settings, so it does not need an environment,
+	// but an environment that is set must be valid. With neither, fail closed.
 	environment := os.Getenv(EnvironmentKey)
-	if !isValidEnvironment(environment) {
+	customConfigFileWithPath := os.Getenv(EnvironmentCustomFilePath)
+	if !isValidEnvironment(environment) && (len(environment) > 0 || len(customConfigFileWithPath) == 0) {
 		err = ErrInvalidEnvironment
 		return nil, err
 	}
@@ -218,7 +221,6 @@ func LoadConfigFile() (_appConfig *Config, err error) {
 	viper.SetConfigType("json")
 
 	// Do we have a custom config file? (use this instead of the environment file)
-	customConfigFileWithPath := os.Getenv(EnvironmentCustomFilePath)
 	if len(customConfigFileWithPath) > 0 {
 		var b []byte
 

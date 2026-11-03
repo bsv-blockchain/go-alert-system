@@ -11,6 +11,7 @@ import (
 	"github.com/bsv-blockchain/go-alert-system/app/config"
 	"github.com/bsv-blockchain/go-alert-system/app/models"
 	"github.com/bsv-blockchain/go-alert-system/app/models/model"
+	"github.com/bsv-blockchain/go-alert-system/internal/testkeys"
 	"github.com/bsv-blockchain/go-alert-system/utils"
 )
 
@@ -36,7 +37,7 @@ func (f *fakeStream) Close() error {
 
 // loadTestDependencies loads the test configuration and stores the genesis alert
 // (sequence 0), which activates the test genesis keys: the public keys of
-// utils.Key1 to utils.Key5
+// testkeys.Key1 to testkeys.Key5
 func loadTestDependencies(t *testing.T) *config.Config {
 	t.Helper()
 	ctx := context.Background()
@@ -69,7 +70,7 @@ func signedAlertBytesWithMessage(
 	alert.SetRawMessage(message)
 	alert.SerializeData()
 
-	sigs, err := utils.SignWithKeys(alert.GetRawData(), []string{utils.Key1, utils.Key2, utils.Key3})
+	sigs, err := utils.SignWithKeys(alert.GetRawData(), []string{testkeys.Key1, testkeys.Key2, testkeys.Key3})
 	require.NoError(t, err)
 	alert.SetSignatures(sigs)
 	return alert.Serialize()

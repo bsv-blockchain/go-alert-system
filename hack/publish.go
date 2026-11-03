@@ -27,9 +27,15 @@ func main() {
 	// pubKeys := flag.String("pub-keys", "", "public keys to be used for set keys")
 	blockHash := flag.String("block-hash", "", "block hash to invalidate")
 	// peer := flag.String("peer", "", "peer to ban/unban")
-	keys := flag.String("signing-keys", "", "signing keys")
+	keys := flag.String("signing-keys", "", "three comma separated private keys to sign with (required)")
 
 	flag.Parse()
+
+	// The alert must be signed with keys the network trusts; there is no default
+	privKeys := strings.Split(*keys, ",")
+	if len(privKeys) != 3 {
+		log.Fatalf("--signing-keys is required: %s", ErrThreePrivateKeysNotSupplied.Error())
+	}
 
 	ctx := context.Background()
 
@@ -81,18 +87,8 @@ func main() {
 	}
 
 	var sigs [][]byte
-	if *keys == "" {
-		if sigs, err = utils.SignWithGenesis(a.GetRawData()); err != nil {
-			panic(err)
-		}
-	} else {
-		privKeys := strings.Split(*keys, ",")
-		if len(privKeys) != 3 {
-			panic(ErrThreePrivateKeysNotSupplied)
-		}
-		if sigs, err = utils.SignWithKeys(a.GetRawData(), privKeys); err != nil {
-			panic(err)
-		}
+	if sigs, err = utils.SignWithKeys(a.GetRawData(), privKeys); err != nil {
+		panic(err)
 	}
 
 	a.SetSignatures(sigs)

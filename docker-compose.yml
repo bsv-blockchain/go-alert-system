@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   alert-system:
-    image: docker.io/bsvb/alert-key:latest
+    build: .
     user: root
     environment:
       - ALERT_SYSTEM_CONFIG_FILEPATH=/config.json

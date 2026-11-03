@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/bsv-blockchain/go-alert-system/app/models/model"
-	"github.com/bsv-blockchain/go-alert-system/utils"
 )
 
 // CreateGenesisAlert will create the genesis alert if it is not in the database
@@ -54,14 +53,9 @@ func CreateGenesisAlert(ctx context.Context, opts ...model.Options) error {
 	newAlert.Processed = true
 
 	// Serialize the data
+	// The genesis alert is not signed: it is created locally from the configured genesis keys,
+	// its hash does not cover signatures, and it is never synced to or verified by peers
 	newAlert.SerializeData()
-
-	// Sign the genesis alert
-	var sigs [][]byte
-	if sigs, err = utils.SignWithGenesis(newAlert.data); err != nil {
-		return err
-	}
-	newAlert.signatures = sigs
 
 	// Save the keys
 	for i := range keysToSave {

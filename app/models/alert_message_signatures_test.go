@@ -9,6 +9,7 @@ import (
 	"github.com/bitcoinsv/bsvd/bsvec"
 
 	"github.com/bsv-blockchain/go-alert-system/app/models/model"
+	"github.com/bsv-blockchain/go-alert-system/internal/testkeys"
 	"github.com/bsv-blockchain/go-alert-system/utils"
 )
 
@@ -55,8 +56,8 @@ func (ts *TestSuite) requireSignaturesValid(activeKeys, signingKeys []string, wa
 // TestAlertMessage_AreSignaturesValid_ThreeDistinctKeys accepts three signatures from three active keys
 func (ts *TestSuite) TestAlertMessage_AreSignaturesValid_ThreeDistinctKeys() {
 	ts.requireSignaturesValid(
-		[]string{utils.Key1, utils.Key2, utils.Key3, utils.Key4, utils.Key5},
-		[]string{utils.Key1, utils.Key2, utils.Key3},
+		[]string{testkeys.Key1, testkeys.Key2, testkeys.Key3, testkeys.Key4, testkeys.Key5},
+		[]string{testkeys.Key1, testkeys.Key2, testkeys.Key3},
 		true,
 	)
 }
@@ -64,8 +65,8 @@ func (ts *TestSuite) TestAlertMessage_AreSignaturesValid_ThreeDistinctKeys() {
 // TestAlertMessage_AreSignaturesValid_ZeroSignatures rejects an empty signature set
 func (ts *TestSuite) TestAlertMessage_AreSignaturesValid_ZeroSignatures() {
 	ctx := context.Background()
-	ts.activateTestKeys(ctx, utils.Key1, utils.Key2, utils.Key3)
-	alert := ts.newSignedTestAlert([]string{utils.Key1, utils.Key2, utils.Key3})
+	ts.activateTestKeys(ctx, testkeys.Key1, testkeys.Key2, testkeys.Key3)
+	alert := ts.newSignedTestAlert([]string{testkeys.Key1, testkeys.Key2, testkeys.Key3})
 	alert.SetSignatures(nil)
 
 	valid, err := alert.AreSignaturesValid(ctx)
@@ -76,8 +77,8 @@ func (ts *TestSuite) TestAlertMessage_AreSignaturesValid_ZeroSignatures() {
 // TestAlertMessage_AreSignaturesValid_TwoSignatures rejects fewer than three signatures
 func (ts *TestSuite) TestAlertMessage_AreSignaturesValid_TwoSignatures() {
 	ts.requireSignaturesValid(
-		[]string{utils.Key1, utils.Key2, utils.Key3},
-		[]string{utils.Key1, utils.Key2},
+		[]string{testkeys.Key1, testkeys.Key2, testkeys.Key3},
+		[]string{testkeys.Key1, testkeys.Key2},
 		false,
 	)
 }
@@ -85,8 +86,8 @@ func (ts *TestSuite) TestAlertMessage_AreSignaturesValid_TwoSignatures() {
 // TestAlertMessage_AreSignaturesValid_SameKeyThreeTimes rejects three signatures from one keyholder
 func (ts *TestSuite) TestAlertMessage_AreSignaturesValid_SameKeyThreeTimes() {
 	ts.requireSignaturesValid(
-		[]string{utils.Key1, utils.Key2, utils.Key3},
-		[]string{utils.Key1, utils.Key1, utils.Key1},
+		[]string{testkeys.Key1, testkeys.Key2, testkeys.Key3},
+		[]string{testkeys.Key1, testkeys.Key1, testkeys.Key1},
 		false,
 	)
 }
@@ -94,8 +95,8 @@ func (ts *TestSuite) TestAlertMessage_AreSignaturesValid_SameKeyThreeTimes() {
 // TestAlertMessage_AreSignaturesValid_RepeatedKey rejects two distinct keys plus a repeat
 func (ts *TestSuite) TestAlertMessage_AreSignaturesValid_RepeatedKey() {
 	ts.requireSignaturesValid(
-		[]string{utils.Key1, utils.Key2, utils.Key3},
-		[]string{utils.Key1, utils.Key2, utils.Key1},
+		[]string{testkeys.Key1, testkeys.Key2, testkeys.Key3},
+		[]string{testkeys.Key1, testkeys.Key2, testkeys.Key1},
 		false,
 	)
 }
@@ -103,8 +104,8 @@ func (ts *TestSuite) TestAlertMessage_AreSignaturesValid_RepeatedKey() {
 // TestAlertMessage_AreSignaturesValid_InactiveKey rejects a signature from a key that is not active
 func (ts *TestSuite) TestAlertMessage_AreSignaturesValid_InactiveKey() {
 	ts.requireSignaturesValid(
-		[]string{utils.Key1, utils.Key2, utils.Key3},
-		[]string{utils.Key1, utils.Key2, utils.Key4},
+		[]string{testkeys.Key1, testkeys.Key2, testkeys.Key3},
+		[]string{testkeys.Key1, testkeys.Key2, testkeys.Key4},
 		false,
 	)
 }
@@ -112,8 +113,8 @@ func (ts *TestSuite) TestAlertMessage_AreSignaturesValid_InactiveKey() {
 // TestAlertMessage_AreSignaturesValid_TamperedData rejects signatures over different data
 func (ts *TestSuite) TestAlertMessage_AreSignaturesValid_TamperedData() {
 	ctx := context.Background()
-	ts.activateTestKeys(ctx, utils.Key1, utils.Key2, utils.Key3)
-	alert := ts.newSignedTestAlert([]string{utils.Key1, utils.Key2, utils.Key3})
+	ts.activateTestKeys(ctx, testkeys.Key1, testkeys.Key2, testkeys.Key3)
+	alert := ts.newSignedTestAlert([]string{testkeys.Key1, testkeys.Key2, testkeys.Key3})
 	alert.SetRawMessage([]byte{0x05, 'w', 'o', 'r', 'l', 'd'})
 	alert.SerializeData()
 
@@ -124,7 +125,7 @@ func (ts *TestSuite) TestAlertMessage_AreSignaturesValid_TamperedData() {
 
 // TestAlertMessage_AreSignaturesValid_NoActiveKeys returns an error when no keys are active
 func (ts *TestSuite) TestAlertMessage_AreSignaturesValid_NoActiveKeys() {
-	alert := ts.newSignedTestAlert([]string{utils.Key1, utils.Key2, utils.Key3})
+	alert := ts.newSignedTestAlert([]string{testkeys.Key1, testkeys.Key2, testkeys.Key3})
 
 	valid, err := alert.AreSignaturesValid(context.Background())
 	ts.Require().ErrorIs(err, ErrNoActivePublicKeys)
@@ -136,9 +137,9 @@ func (ts *TestSuite) TestAlertMessage_AreSignaturesValid_NoActiveKeys() {
 // Distinctness has to be decided by the key a signature recovers to, not by the stored string.
 func (ts *TestSuite) TestAlertMessage_AreSignaturesValid_SameKeyStoredTwice() {
 	ctx := context.Background()
-	ts.activateTestKeys(ctx, utils.Key1, utils.Key2, utils.Key3)
+	ts.activateTestKeys(ctx, testkeys.Key1, testkeys.Key2, testkeys.Key3)
 
-	pub, err := bitcoin.PubKeyFromPrivateKeyString(utils.Key1, true)
+	pub, err := bitcoin.PubKeyFromPrivateKeyString(testkeys.Key1, true)
 	ts.Require().NoError(err)
 	key := NewPublicKey(model.WithAllDependencies(ts.Dependencies), model.New())
 	key.Key = strings.ToUpper(pub)
@@ -148,7 +149,7 @@ func (ts *TestSuite) TestAlertMessage_AreSignaturesValid_SameKeyStoredTwice() {
 	// Which spelling a signature is attributed to depends on map iteration order, so
 	// repeat enough times that a string keyed implementation cannot pass by luck
 	for i := 0; i < 32; i++ {
-		alert := ts.newSignedTestAlert([]string{utils.Key1, utils.Key1, utils.Key2})
+		alert := ts.newSignedTestAlert([]string{testkeys.Key1, testkeys.Key1, testkeys.Key2})
 		valid, validErr := alert.AreSignaturesValid(ctx)
 		ts.Require().NoError(validErr)
 		ts.Require().False(valid)
@@ -161,7 +162,7 @@ func (ts *TestSuite) TestAlertMessage_AreSignaturesValid_SameKeyStoredTwice() {
 // decompression and then reaches a nil ModInverse, which is a nil pointer dereference.
 func (ts *TestSuite) TestAlertMessage_AreSignaturesValid_MalformedSignatures() {
 	ctx := context.Background()
-	ts.activateTestKeys(ctx, utils.Key1, utils.Key2, utils.Key3)
+	ts.activateTestKeys(ctx, testkeys.Key1, testkeys.Key2, testkeys.Key3)
 
 	curveOrder := bsvec.S256().N.FillBytes(make([]byte, 32))
 	one := make([]byte, 32)
@@ -218,7 +219,7 @@ func (ts *TestSuite) TestAlertMessage_AreSignaturesValid_MalformedSignatures() {
 
 	for _, tt := range tests {
 		ts.Run(tt.name, func() {
-			alert := ts.newSignedTestAlert([]string{utils.Key1, utils.Key2, utils.Key3})
+			alert := ts.newSignedTestAlert([]string{testkeys.Key1, testkeys.Key2, testkeys.Key3})
 			sigs := alert.signatures
 			sigs[0] = tt.sig(sigs[0])
 			alert.SetSignatures(sigs)

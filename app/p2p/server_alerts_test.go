@@ -11,14 +11,14 @@ import (
 
 	"github.com/bsv-blockchain/go-alert-system/app/models"
 	"github.com/bsv-blockchain/go-alert-system/app/models/model"
-	"github.com/bsv-blockchain/go-alert-system/utils"
+	"github.com/bsv-blockchain/go-alert-system/internal/testkeys"
 )
 
 // duplicateKeySetKeysPayload builds a 165 byte set keys payload that repeats a key
 func duplicateKeySetKeysPayload(t *testing.T) []byte {
 	t.Helper()
 	payload := make([]byte, 0, 165)
-	for _, priv := range []string{utils.Key1, utils.Key2, utils.Key3, utils.Key4, utils.Key1} {
+	for _, priv := range []string{testkeys.Key1, testkeys.Key2, testkeys.Key3, testkeys.Key4, testkeys.Key1} {
 		pub, err := bitcoin.PubKeyFromPrivateKeyString(priv, true)
 		require.NoError(t, err)
 		b, err := hex.DecodeString(pub)

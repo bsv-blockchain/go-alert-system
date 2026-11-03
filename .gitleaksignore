@@ -1,0 +1,6 @@
+# Public development keys (local/test genesis keys), moved from utils/keys.go before they were annotated with gitleaks:allow
+34bd404adeb78ca3544ab180cccefcea85bc1b60:internal/testkeys/testkeys.go:generic-api-key:11
+34bd404adeb78ca3544ab180cccefcea85bc1b60:internal/testkeys/testkeys.go:generic-api-key:12
+34bd404adeb78ca3544ab180cccefcea85bc1b60:internal/testkeys/testkeys.go:generic-api-key:13
+34bd404adeb78ca3544ab180cccefcea85bc1b60:internal/testkeys/testkeys.go:generic-api-key:14
+34bd404adeb78ca3544ab180cccefcea85bc1b60:internal/testkeys/testkeys.go:generic-api-key:15
