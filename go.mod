@@ -9,7 +9,7 @@ require (
 	github.com/bitcoinsv/bsvutil v0.0.0-20181216182056-1d77cf353ea9
 	github.com/bsv-blockchain/go-bn v1.2.0
 	github.com/bsv-blockchain/go-bt/v2 v2.7.4
-	github.com/bsv-blockchain/go-sdk v1.7.3
+	github.com/bsv-blockchain/go-sdk v1.7.4
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/libp2p/go-libp2p v0.51.0
 	github.com/libp2p/go-libp2p-kad-dht v0.43.0
