@@ -7,16 +7,16 @@ require (
 	github.com/bitcoinschema/go-bitcoin v0.3.20
 	github.com/bitcoinsv/bsvd v0.0.0-20190609155523-4c29707f7173
 	github.com/bitcoinsv/bsvutil v0.0.0-20181216182056-1d77cf353ea9
-	github.com/bsv-blockchain/go-bn v1.2.0
-	github.com/bsv-blockchain/go-bt/v2 v2.7.4
-	github.com/bsv-blockchain/go-sdk v1.7.4
+	github.com/bsv-blockchain/go-bn v1.2.1
+	github.com/bsv-blockchain/go-bt/v2 v2.7.6
+	github.com/bsv-blockchain/go-sdk v1.7.5
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/libp2p/go-libp2p v0.51.0
 	github.com/libp2p/go-libp2p-kad-dht v0.43.0
 	github.com/libp2p/go-libp2p-pubsub v0.19.0
 	github.com/mrz1836/go-api-router v1.1.2
 	github.com/mrz1836/go-datastore v1.4.4
-	github.com/mrz1836/go-logger v1.0.6
+	github.com/mrz1836/go-logger v1.0.7
 	github.com/multiformats/go-multiaddr v0.16.1
 	github.com/newrelic/go-agent/v3/integrations/nrhttprouter v1.1.5
 	github.com/pkg/errors v0.9.1
@@ -170,7 +170,7 @@ require (
 	golang.org/x/exp v0.0.0-20261014143641-f0251eb4aa3e // indirect
 	golang.org/x/mod v0.42.0 // indirect
 	golang.org/x/net v0.62.0 // indirect
-	golang.org/x/sync v0.24.0 // indirect
+	golang.org/x/sync v0.25.0 // indirect
 	golang.org/x/sys v0.49.0 // indirect
 	golang.org/x/telemetry v0.0.0-20261021172232-6cd571d43fbb // indirect
 	golang.org/x/text v0.43.0 // indirect
