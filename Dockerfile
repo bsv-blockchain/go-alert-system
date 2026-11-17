@@ -10,7 +10,7 @@ COPY go.sum go.sum
 RUN CGO_ENABLED=0 go build -a -o $APP_ROOT/src/go-alert-system github.com/bsv-blockchain/go-alert-system/cmd/go-alert-system
 
 # Copy the controller-manager into a thin image
-FROM registry.access.redhat.com/ubi9-minimal:9.8@sha256:f26ef64172ea61f5ac5ba4be8c5c738bf8760b22b3e5148ce7b40f7308ab32db
+FROM registry.access.redhat.com/ubi9-minimal:9.9@sha256:baafce2d34783a28b4a472779f304e97e00f9d35c99553bc53b068b14344d9a9
 WORKDIR /
 # The p2p private key is generated here on first start; mount a volume at /.bitcoin to keep the peer ID across restarts
 RUN mkdir /.bitcoin && chown 65534:65534 /.bitcoin && chmod 700 /.bitcoin
