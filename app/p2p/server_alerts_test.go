@@ -125,7 +125,16 @@ func TestServer_Subscribe_storesFreshGossipedAlert(t *testing.T) {
 	s := newTestServer(t)
 	sub, err := joinTopic(receiverHost).Subscribe()
 	require.NoError(t, err)
-	go s.Subscribe(ctx, sub, receiverHost.ID())
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		s.Subscribe(ctx, sub, receiverHost.ID())
+	}()
+	// registered after newTestServer, so Subscribe returns before the datastore is closed
+	t.Cleanup(func() {
+		cancel()
+		<-done
+	})
 
 	publisherTopic := joinTopic(publisherHost)
 	require.NoError(t, mn.ConnectAllButSelf())

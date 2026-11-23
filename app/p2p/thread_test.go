@@ -46,6 +46,13 @@ func loadTestDependencies(t *testing.T) *config.Config {
 	require.NoError(t, err)
 	t.Cleanup(func() { deps.CloseAll(ctx) })
 
+	// The test datastore is an unshared in-memory SQLite database, where every new pooled
+	// connection opens its own empty database. Pin the pool to one connection so goroutines
+	// that query concurrently all see the same tables. Raw only builds the statement
+	sqlDB, err := deps.Services.Datastore.Raw("SELECT 1").DB()
+	require.NoError(t, err)
+	sqlDB.SetMaxOpenConns(1)
+
 	require.NoError(t, models.CreateGenesisAlert(ctx, model.WithAllDependencies(deps)))
 	return deps
 }
