@@ -4,9 +4,13 @@ import (
 	"context"
 	"encoding/hex"
 	"testing"
+	"time"
 
 	"github.com/bitcoinschema/go-bitcoin"
+	pubsub "github.com/libp2p/go-libp2p-pubsub"
+	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/peer"
+	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/bsv-blockchain/go-alert-system/app/models"
@@ -93,6 +97,58 @@ func TestServer_handleAlert(t *testing.T) {
 		s := newTestServer(t)
 		require.ErrorIs(t, s.handleAlert(context.Background(), "topic", []byte{0x01, 0x02}, from), models.ErrAlertTooShort)
 	})
+}
+
+// TestServer_Subscribe_storesFreshGossipedAlert is a regression test for issue #171: v0.1.x
+// discarded every alert received over gossipsub that it did not already have, because the
+// duplicate check compared against the wrong "not found" sentinel
+func TestServer_Subscribe_storesFreshGossipedAlert(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	mn, err := mocknet.FullMeshLinked(2)
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = mn.Close() })
+	hosts := mn.Hosts()
+	publisherHost, receiverHost := hosts[0], hosts[1]
+
+	const topicName = "bitcoin_alert_system_test"
+	joinTopic := func(h host.Host) *pubsub.Topic {
+		t.Helper()
+		ps, psErr := pubsub.NewGossipSub(ctx, h)
+		require.NoError(t, psErr)
+		topic, joinErr := ps.Join(topicName)
+		require.NoError(t, joinErr)
+		return topic
+	}
+
+	s := newTestServer(t)
+	sub, err := joinTopic(receiverHost).Subscribe()
+	require.NoError(t, err)
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		s.Subscribe(ctx, sub, receiverHost.ID())
+	}()
+	// registered after newTestServer, so Subscribe returns before the datastore is closed
+	t.Cleanup(func() {
+		cancel()
+		<-done
+	})
+
+	publisherTopic := joinTopic(publisherHost)
+	require.NoError(t, mn.ConnectAllButSelf())
+	require.Eventually(t, func() bool {
+		return len(publisherTopic.ListPeers()) > 0
+	}, 5*time.Second, 10*time.Millisecond, "publisher never saw the receiver on the topic")
+
+	raw := signedAlertBytes(t, s.config, models.AlertTypeInformational, 1)
+	require.NoError(t, publisherTopic.Publish(ctx, raw))
+
+	require.Eventually(t, func() bool {
+		saved, getErr := models.GetAlertMessageBySequenceNumber(ctx, 1, model.WithAllDependencies(s.config))
+		return getErr == nil && saved != nil && saved.Processed
+	}, 5*time.Second, 20*time.Millisecond, "a fresh alert received over gossipsub must be stored and processed")
 }
 
 // TestServer_processAlerts covers the retry cron for unprocessed alerts
